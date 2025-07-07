@@ -1,0 +1,58 @@
+﻿@page "/logs/details/{id:int}"
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+<h3>Detalhes do Log</h3>
+
+@if (log != null)
+{
+    <dl class="row">
+        <dt class="col-sm-3">Job ID</dt>
+        <dd class="col-sm-9">@log.JobId</dd>
+
+        <dt class="col-sm-3">Data de Execução</dt>
+        <dd class="col-sm-9">@log.ExecutionTime</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">@log.Status</dd>
+
+        <dt class="col-sm-3">Saída</dt>
+        <dd class="col-sm-9"><pre>@log.Output</pre></dd>
+    </dl>
+
+    <button class="btn btn-secondary" @onclick="Voltar">Voltar</button>
+}
+else
+{
+    <p>@ErrorMessage</p>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Log? log;
+    private string? ErrorMessage;
+
+    /// <summary>
+    /// Inicializa o componente e carrega o log para exibição de detalhes.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            log = await Task.Run(() => DbContext.Logs.FirstOrDefault(l => l.Id == id));
+            if (log == null)
+            {
+                ErrorMessage = "Log não encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar log: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Volta para a lista de logs.
+    /// </summary>
+    private void Voltar() => Navigation.NavigateTo("/logs");
+}

@@ -1,0 +1,48 @@
+﻿@using MudBlazor
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <Authorizing>
+                <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudText Class="ml-4" Typo="Typo.h6">Autorizando...</MudText>
+                </MudContainer>
+            </Authorizing>
+            <NotAuthorized>
+                <MudContainer Class="d-flex flex-column justify-center align-center" Style="height: 100vh;">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Large" />
+                    <MudText Typo="Typo.h5" Class="mt-4">Acesso negado</MudText>
+                    <MudText Typo="Typo.body1" Class="mt-2">Você não tem permissão para acessar esta página.</MudText>
+                    <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+                        Voltar para a página inicial
+                    </MudButton>
+                </MudContainer>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <MudContainer Class="d-flex flex-column justify-center align-center" Style="height: 100vh;">
+                <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Warning" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Class="mt-4">Página não encontrada</MudText>
+                <MudText Typo="Typo.body1" Class="mt-2">Desculpe, não encontramos nada nesse endereço.</MudText>
+                <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+                    Voltar para a página inicial
+                </MudButton>
+            </MudContainer>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Ensure MudBlazor theme is properly initialized
+        base.OnInitialized();
+    }
+}

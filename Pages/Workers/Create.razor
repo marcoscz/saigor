@@ -1,0 +1,46 @@
+﻿@page "/workers/create"
+@using MudBlazor
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Novo Worker</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <EditForm Model="@worker" OnValidSubmit="Salvar">
+                <DataAnnotationsValidator />
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Nome" @bind-Value="worker.Name" For="@(() => worker.Name)" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Status" @bind-Value="worker.Status" For="@(() => worker.Status)" />
+                    </MudItem>
+                </MudGrid>
+                <MudCardActions Class="mt-4">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Salvar</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Class="ml-2">Cancelar</MudButton>
+                </MudCardActions>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private Worker worker = new();
+
+    void Salvar()
+    {
+        worker.LastExecution = DateTime.Now;
+        DbContext.Workers.Add(worker);
+        DbContext.SaveChanges();
+        Navigation.NavigateTo("/workers");
+    }
+
+    void Cancelar()
+    {
+        Navigation.NavigateTo("/workers");
+    }
+}

@@ -1,0 +1,115 @@
+﻿@page "/jobs/delete/{id:int}"
+@using MudBlazor
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+@if (isLoading)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+        <MudCard>
+            <MudCardContent>
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                <MudText Class="ml-3">Carregando...</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudContainer>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Class="mt-2">Voltar</MudButton>
+    </MudContainer>
+}
+else if (job != null)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h5">Excluir Job</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>
+                    Tem certeza que deseja excluir o job <strong>@job.Name</strong>?
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-2">
+                    Esta ação não pode ser desfeita.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Excluir" Disabled="@isProcessing">
+                    @if (isProcessing)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" />
+                        <span class="ml-2">Excluindo...</span>
+                    }
+                    else
+                    {
+                        <span>Excluir</span>
+                    }
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Disabled="@isProcessing">Cancelar</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Job? job;
+    private bool isLoading = true;
+    private bool isProcessing;
+    private string? ErrorMessage;
+
+    /// <summary>
+    /// Inicializa o componente e carrega o job para exclusão.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            job = await DbContext.Jobs.FindAsync(id);
+            if (job == null)
+            {
+                ErrorMessage = "Job não encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar job: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Exclui o job do banco de dados.
+    /// </summary>
+    private async Task Excluir()
+    {
+        if (isProcessing || job == null) return;
+        try
+        {
+            isProcessing = true;
+            DbContext.Jobs.Remove(job);
+            await DbContext.SaveChangesAsync();
+            Navigation.NavigateTo("/jobs");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao excluir job: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Cancela a exclusão e retorna para a lista de jobs.
+    /// </summary>
+    private void Cancelar() => Navigation.NavigateTo("/jobs");
+}

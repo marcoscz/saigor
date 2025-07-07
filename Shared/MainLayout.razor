@@ -1,0 +1,85 @@
+﻿@using MudBlazor
+@inherits LayoutComponentBase
+
+<PageTitle>Saigor</PageTitle>
+
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary" Class="px-2">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                      Color="Color.Inherit" 
+                      Edge="Edge.Start" 
+                      OnClick="@((e) => DrawerToggle())"
+                      aria-label="Abrir/Fechar menu de navegação" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="ml-2">
+            <MudIcon Icon="@Icons.Material.Filled.WorkHistory" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="d-none d-sm-block">Sistema Fluxo de Processo</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="d-sm-none">SFP</MudText>
+        </MudStack>
+        <MudSpacer />
+        <MudTooltip Text="Alternar Tema" Placement="Placement.Left">
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" 
+                          Color="Color.Inherit" 
+                          OnClick="@ToggleTheme"
+                          aria-label="Alternar tema claro/escuro" />
+        </MudTooltip>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-2 d-none d-md-block" />
+        <MudTooltip Text="Documentação" Placement="Placement.Left" Class="d-md-none">
+            <MudIconButton Icon="@Icons.Material.Filled.Info"
+                          Color="Color.Inherit"
+                          Href="https://docs.microsoft.com/aspnet/"
+                          Target="_blank" />
+        </MudTooltip>
+        <MudButton Href="https://docs.microsoft.com/aspnet/" 
+                  Target="_blank" 
+                  StartIcon="@Icons.Material.Filled.Info" 
+                  Color="Color.Inherit" 
+                  Variant="Variant.Text"
+                  Class="d-none d-md-flex">
+            Login
+        </MudButton>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" 
+               Variant="DrawerVariant.Responsive" 
+               ClipMode="DrawerClipMode.Always" 
+               Elevation="2" 
+               Class="@($"mud-drawer-{(_isDarkMode ? "dark" : "light")}")">
+        <NavMenu OnToggleNav="DrawerToggle"/>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+    <MudScrollToTop>
+        <MudFab icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Primary" />
+    </MudScrollToTop>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode;
+
+    /// <summary>
+    /// Alterna a abertura do menu lateral.
+    /// </summary>
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    /// <summary>
+    /// Alterna entre tema claro e escuro.
+    /// </summary>
+    private void ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+}

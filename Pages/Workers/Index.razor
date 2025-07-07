@@ -1,0 +1,92 @@
+﻿@page "/workers"
+@using MudBlazor
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+@if (isLoading)
+{
+    <MudContainer Class="d-flex justify-center align-center" Style="min-height: 200px;">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="ml-3">Carregando workers...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudText Typo="Typo.h5" Class="mb-4">Workers</MudText>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateWorker" StartIcon="@Icons.Material.Filled.Add" Class="mb-3">
+        Novo Worker
+    </MudButton>
+
+    <MudAlert Severity="Severity.Error" Elevation="0" Dense="true" Class="mb-2" Style="@ErrorAlertStyle">
+        @ErrorMessage
+    </MudAlert>
+
+    <MudTable Items="workers" Hover="true" Dense="true" Elevation="1" Class="mb-4">
+    <HeaderContent>
+        <MudTh>Nome</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Última Execução</MudTh>
+        <MudTh>Ações</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nome">@context.Name</MudTd>
+        <MudTd DataLabel="Status">@context.Status</MudTd>
+        <MudTd DataLabel="Última Execução">@context.LastExecution?.ToString("dd/MM/yyyy HH:mm")</MudTd>
+        <MudTd DataLabel="Ações">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" OnClick="@(() => EditWorker(context.Id))" StartIcon="@Icons.Material.Filled.Edit">Editar</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWorker(context.Id))" StartIcon="@Icons.Material.Filled.Delete" Class="ml-2">Excluir</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="m-4">Nenhum worker encontrado.</MudText>
+    </NoRecordsContent>
+</MudTable>
+}
+
+@code {
+    private List<Worker> workers = new();
+    private string? ErrorMessage;
+    private bool isLoading = true;
+
+    /// <summary>
+    /// Inicializa o componente e carrega os workers.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await LoadWorkersAsync();
+        isLoading = false;
+    }
+
+    /// <summary>
+    /// Carrega a lista de workers do banco de dados.
+    /// </summary>
+    private async Task LoadWorkersAsync()
+    {
+        try
+        {
+            workers = await Task.Run(() => DbContext.Workers.ToList());
+            ErrorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar workers: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Navega para a página de criação de worker.
+    /// </summary>
+    void CreateWorker() => Navigation.NavigateTo("/workers/create");
+    /// <summary>
+    /// Navega para a página de edição de worker.
+    /// </summary>
+    void EditWorker(int id) => Navigation.NavigateTo($"/workers/edit/{id}");
+    /// <summary>
+    /// Navega para a página de exclusão de worker.
+    /// </summary>
+    void DeleteWorker(int id) => Navigation.NavigateTo($"/workers/delete/{id}");
+
+    private string ErrorAlertStyle => string.IsNullOrEmpty(ErrorMessage) ? "display:none" : "display:block";
+}

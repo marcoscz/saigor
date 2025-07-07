@@ -1,0 +1,75 @@
+﻿@page "/logs/delete/{id:int}"
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+<h3>Excluir Log</h3>
+
+<p>Tem certeza que deseja excluir este log?</p>
+
+@if (log != null)
+{
+    <p><strong>Job ID:</strong> @log.JobId</p>
+    <p><strong>Data:</strong> @log.ExecutionTime</p>
+    <p><strong>Status:</strong> @log.Status</p>
+
+    <button class="btn btn-danger" @onclick="Excluir">Excluir</button>
+    <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+}
+else
+{
+    <p>@ErrorMessage</p>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Log? log;
+    private bool isProcessing;
+    private string? ErrorMessage;
+
+    /// <summary>
+    /// Inicializa o componente e carrega o log para exclusão.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            log = await Task.Run(() => DbContext.Logs.FirstOrDefault(l => l.Id == id));
+            if (log == null)
+            {
+                ErrorMessage = "Log não encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar log: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Exclui o log do banco de dados.
+    /// </summary>
+    private async Task Excluir()
+    {
+        if (isProcessing || log == null) return;
+        try
+        {
+            isProcessing = true;
+            DbContext.Logs.Remove(log);
+            await DbContext.SaveChangesAsync();
+            Navigation.NavigateTo("/logs");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao excluir log: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Cancela a exclusão e retorna para a lista de logs.
+    /// </summary>
+    private void Cancelar() => Navigation.NavigateTo("/logs");
+}

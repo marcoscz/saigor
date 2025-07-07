@@ -1,0 +1,139 @@
+﻿@page "/jobs/edit/{id:int}"
+@using MudBlazor
+@using Saigor.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@inject ILogger<Edit> Logger
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Editar Job</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoading)
+            {
+                <div class="d-flex align-center justify-center">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudText Class="ml-4">Carregando...</MudText>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@job" OnValidSubmit="SalvarAsync">
+                    <DataAnnotationsValidator />
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Nome" @bind-Value="job.Name" For="@(() => job.Name)" Required="true" Disabled="@isProcessing" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Comando" @bind-Value="job.Command" For="@(() => job.Command)" Required="true" Lines="3" Disabled="@isProcessing" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Agendamento (cron)" @bind-Value="job.Schedule" For="@(() => job.Schedule)" Required="true" HelperText="Formato: * * * * * (minuto hora dia mês dia-semana)" Disabled="@isProcessing" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Worker ID" @bind-Value="job.WorkerId" For="@(() => job.WorkerId)" Required="true" Disabled="@isProcessing" />
+                        </MudItem>
+                    </MudGrid>
+                    <MudCardActions Class="mt-4">
+                        <MudButton ButtonType="ButtonType.Submit" 
+                                  Variant="Variant.Filled" 
+                                  Color="Color.Primary"
+                                  Disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                                <MudText Class="ms-2">Salvando...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Salvar</MudText>
+                            }
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  OnClick="Cancelar" 
+                                  Class="ml-2"
+                                  Disabled="@isProcessing">Cancelar</MudButton>
+                    </MudCardActions>
+                </EditForm>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Job job = new();
+    private bool isLoading = true;
+    private bool isProcessing;
+
+    /// <summary>
+    /// Inicializa o componente e carrega o job para edição.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var found = await DbContext.Jobs.FindAsync(id);
+            if (found is not null)
+                job = found;
+            else
+            {
+                Snackbar.Add("Job não encontrado.", Severity.Error);
+                Navigation.NavigateTo("/jobs");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao carregar job para edição: {Message}", ex.Message);
+            Snackbar.Add("Erro ao carregar job.", Severity.Error);
+            Navigation.NavigateTo("/jobs");
+            return;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Salva as alterações do job no banco de dados.
+    /// </summary>
+    private async Task SalvarAsync()
+    {
+        if (isProcessing) return;
+        
+        try
+        {
+            isProcessing = true;
+            await DbContext.SaveChangesAsync();
+            Snackbar.Add("Job salvo com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/jobs");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao salvar job: {Message}", ex.Message);
+            Snackbar.Add("Erro ao salvar o job", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Cancela a edição e retorna para a lista de jobs.
+    /// </summary>
+    private void Cancelar()
+    {
+        if (!isProcessing)
+        {
+            Navigation.NavigateTo("/jobs");
+        }
+    }
+}

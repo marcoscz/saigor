@@ -1,0 +1,53 @@
+﻿@using MudBlazor
+
+<MudDrawerHeader Class="py-4">
+    <MudText Typo="Typo.h5" Color="Color.Primary" Class="ml-2 font-weight-bold">Saigor</MudText>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.End" OnClick="ToggleNavMenu" aria-label="Abrir/Fechar menu de navegação" />
+</MudDrawerHeader>
+
+<MudNavMenu Dense="true" Class="py-2">
+    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Dashboard" Match="NavLinkMatch.All" IconColor="Color.Primary">
+        Dashboard
+    </MudNavLink>
+
+    <MudNavGroup Title="Gerenciamento" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary" Expanded="true">
+        <MudNavLink Href="/workers" Icon="@Icons.Material.Filled.Engineering" IconColor="Color.Info">
+            Workers
+        </MudNavLink>
+        <MudNavLink Href="/jobs" Icon="@Icons.Material.Filled.Work" IconColor="Color.Success">
+            Jobs
+        </MudNavLink>
+        <MudNavLink Href="/tasks" Icon="@Icons.Material.Filled.Task" IconColor="Color.Warning">
+            Tarefas
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Monitoramento" Icon="@Icons.Material.Filled.Timeline" IconColor="Color.Primary" Expanded="true">
+        <MudNavLink Href="/logs" Icon="@Icons.Material.Filled.Assessment" IconColor="Color.Error">
+            Logs
+        </MudNavLink>
+        <MudNavLink Href="/counter" Icon="@Icons.Material.Filled.Analytics" IconColor="Color.Secondary">
+            Counter
+        </MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>
+
+@code {
+    /// <summary>
+    /// Callback para alternar o menu de navegação lateral.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnToggleNav { get; set; }
+
+    private bool collapseNavMenu = true;
+
+    /// <summary>
+    /// Alterna o menu de navegação lateral e dispara o callback.
+    /// </summary>
+    private async Task ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+        await OnToggleNav.InvokeAsync();
+    }
+}

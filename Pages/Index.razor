@@ -1,0 +1,19 @@
+﻿@page "/"
+@using MudBlazor
+
+<PageTitle>Início</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center justify-center" Style="min-height:60vh;">
+    <MudPaper Elevation="2" Class="p-6 text-center w-100" Style="max-width:500px; margin:auto;">
+        <MudText Typo="Typo.h4" GutterBottom="true">Bem-vindo ao Sistema de Gerenciamento de Jobs!</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mb-4">Gerencie Jobs, Workers e Logs de forma moderna e eficiente.</MudText>
+        <MudGrid Spacing="2" Justify="Justify.Center">
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/jobs" StartIcon="@Icons.Material.Filled.Work" FullWidth="true">Ver Jobs</MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/workers" StartIcon="@Icons.Material.Filled.People" FullWidth="true">Ver Workers</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>

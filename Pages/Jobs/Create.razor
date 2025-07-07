@@ -1,0 +1,172 @@
+﻿@page "/jobs/create"
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@inject ILogger<Create> Logger
+@inject ISnackbar Snackbar
+@implements IAsyncDisposable
+
+<MudContainer>
+    <MudCard Class="mt-3">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Novo Job</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <EditForm Model="@job" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Nome" 
+                                    @bind-Value="job.Name" 
+                                    For="@(() => job.Name)"
+                                    Required="true"
+                                    Immediate="true"
+                                    Disabled="@isProcessing" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField Label="Comando" 
+                                    @bind-Value="job.Command"
+                                    For="@(() => job.Command)"
+                                    Required="true"
+                                    Lines="3"
+                                    Immediate="true"
+                                    Disabled="@isProcessing" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Agendamento (cron)" 
+                                    @bind-Value="job.Schedule"
+                                    For="@(() => job.Schedule)"
+                                    Required="true"
+                                    Immediate="true"
+                                    Disabled="@isProcessing"
+                                    HelperText="Formato: * * * * * (minuto hora dia mês dia-semana)" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        @if (loadingWorkers)
+                        {
+                            <MudSkeleton Animation="Animation.Wave" Height="56px"/>
+                        }
+                        else
+                        {
+                            <MudSelect T="int" Label="Worker" 
+                                    @bind-Value="job.WorkerId"
+                                    For="@(() => job.WorkerId)"
+                                    Required="true"
+                                    Disabled="@isProcessing">
+                                @foreach (var worker in workers)
+                                {
+                                    <MudSelectItem Value="@worker.Id">@worker.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    </MudItem>
+                </MudGrid>
+
+                <MudCardActions Class="mt-4">
+                    <MudButton ButtonType="ButtonType.Submit" 
+                              Variant="Variant.Filled" 
+                              Color="Color.Primary"
+                              Disabled="@isProcessing"
+                              Class="ml-auto">
+                        @if (isProcessing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                            <MudText Class="ms-2">Processando</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Salvar</MudText>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                              Color="Color.Secondary"
+                              OnClick="Cancelar"
+                              Disabled="@isProcessing"
+                              Class="ml-2">Cancelar</MudButton>
+                </MudCardActions>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private Job job = new();
+    private List<Worker> workers = new();
+    private bool isProcessing;
+    private bool loadingWorkers = true;
+
+    /// <summary>
+    /// Inicializa o componente e carrega a lista de workers.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            workers = await DbContext.Workers
+                .OrderBy(w => w.Name)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao carregar workers: {Message}", ex.Message);
+            Snackbar.Add("Erro ao carregar lista de workers", Severity.Error);
+        }
+        finally
+        {
+            loadingWorkers = false;
+        }
+    }
+
+    /// <summary>
+    /// Salva o novo job no banco de dados.
+    /// </summary>
+    private async Task SalvarAsync()
+    {
+        if (isProcessing) return;
+        
+        try
+        {
+            isProcessing = true;
+            job.Status = JobStatus.Pendente;
+            
+            await DbContext.Jobs.AddAsync(job);
+            await DbContext.SaveChangesAsync();
+            
+            Snackbar.Add("Job criado com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/jobs");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao salvar job: {Message}", ex.Message);
+            Snackbar.Add("Erro ao salvar o job", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Cancela a criação do job e retorna para a lista.
+    /// </summary>
+    private void Cancelar()
+    {
+        if (!isProcessing)
+        {
+            Navigation.NavigateTo("/jobs");
+        }
+    }
+
+    /// <summary>
+    /// Libera recursos do DbContext.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (DbContext is not null)
+        {
+            await DbContext.DisposeAsync();
+        }
+    }
+}
