@@ -97,7 +97,6 @@
     private Log? log;
     private bool isProcessing;
     private string? errorMessage;
-    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -108,7 +107,6 @@
     {
         try
         {
-            isLoading = true;
             var logs = await LogRepository.GetAllAsync();
             log = logs.FirstOrDefault(l => l.Id == id);
             
@@ -127,10 +125,6 @@
             _logger.LogError(ex, "Erro ao carregar log {LogId} para exclusão", id);
             errorMessage = $"Erro ao carregar log: {ex.Message}";
             Snackbar.Add($"Erro ao carregar log: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
         }
     }
 

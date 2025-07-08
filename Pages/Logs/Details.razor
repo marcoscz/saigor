@@ -89,7 +89,6 @@
     [Parameter] public int id { get; set; }
     private Log? log;
     private string? errorMessage;
-    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,7 +99,6 @@
     {
         try
         {
-            isLoading = true;
             var logs = await LogRepository.GetAllAsync();
             log = logs.FirstOrDefault(l => l.Id == id);
             
@@ -119,10 +117,6 @@
             _logger.LogError(ex, "Erro ao carregar log {LogId}", id);
             errorMessage = $"Erro ao carregar log: {ex.Message}";
             Snackbar.Add($"Erro ao carregar log: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
         }
     }
 
