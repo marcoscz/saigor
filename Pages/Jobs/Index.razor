@@ -1,10 +1,9 @@
 ﻿@page "/jobs"
 @using MudBlazor
 @using Saigor.Shared
+@inherits BasePage
 @inject IJobRepository JobRepository
 @inject IJobSchedulerService JobScheduler
-@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" Class="mb-4">Gerenciamento de Jobs</MudText>
@@ -26,19 +25,16 @@
                           OnClick="RefreshJobs" 
                           StartIcon="@Icons.Material.Filled.Refresh" 
                           FullWidth="true"
-                          Disabled="@isLoading">
+                          Disabled="@IsLoading">
                     Atualizar
                 </MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
 
-    @if (isLoading)
+    @if (IsLoading)
     {
-        <MudPaper Elevation="1" Class="pa-4">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Class="ml-3">Carregando jobs...</MudText>
-        </MudPaper>
+        <LoadingCard Message="Carregando jobs..." />
     }
     else
     {
@@ -47,10 +43,10 @@
                   Dense="true" 
                   Elevation="1" 
                   Class="mb-4"
-                  Loading="@isLoading"
+                  Loading="@IsLoading"
                   Filter="new Func<Job,bool>(FilterFunc)">
             <ToolBarContent>
-                <MudTextField @bind-Value="searchString" 
+                <MudTextField @bind-Value="SearchString" 
                              Placeholder="Buscar jobs..." 
                              Adornment="Adornment.Start" 
                              AdornmentIcon="@Icons.Material.Filled.Search" 
@@ -81,11 +77,7 @@
                     </MudChip>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@GetStatusColor(context.Status)" 
-                             Variant="Variant.Filled" 
-                             Size="Size.Small">
-                        @context.Status
-                    </MudChip>
+                    <StatusChip JobStatus="context.Status" />
                 </MudTd>
                 <MudTd DataLabel="Última Execução">
                     @if (context.LastExecution.HasValue)
@@ -131,8 +123,6 @@
 
 @code {
     private List<Job> jobs = new();
-    private bool isLoading = true;
-    private string searchString = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,92 +131,65 @@
 
     private async Task LoadJobsAsync()
     {
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            isLoading = true;
             var jobsEnumerable = await JobRepository.GetAllAsync();
             jobs = jobsEnumerable.ToList();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Erro ao carregar jobs: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        }, "Erro ao carregar jobs");
     }
 
     private async Task RefreshJobs()
     {
         await LoadJobsAsync();
-        Snackbar.Add("Jobs atualizados com sucesso!", Severity.Success);
+        ShowSuccess("Jobs atualizados com sucesso!");
     }
 
     private async Task StartJob(string jobName)
     {
-        try
+        var success = await ExecuteWithLoadingAsync(
+            async () => await JobScheduler.StartJobAsync(jobName),
+            $"Erro ao iniciar job '{jobName}'");
+
+        if (success)
         {
-            var success = await JobScheduler.StartJobAsync(jobName);
-            if (success)
-            {
-                Snackbar.Add($"Job '{jobName}' iniciado com sucesso!", Severity.Success);
-                await LoadJobsAsync();
-            }
-            else
-            {
-                Snackbar.Add($"Falha ao iniciar o job '{jobName}'", Severity.Error);
-            }
+            ShowSuccess($"Job '{jobName}' iniciado com sucesso!");
+            await LoadJobsAsync();
         }
-        catch (Exception ex)
+        else
         {
-            Snackbar.Add($"Erro ao iniciar job: {ex.Message}", Severity.Error);
+            ShowError($"Falha ao iniciar o job '{jobName}'");
         }
     }
 
     private async Task StopJob(string jobName)
     {
-        try
+        var success = await ExecuteWithLoadingAsync(
+            async () => await JobScheduler.StopJobAsync(jobName),
+            $"Erro ao parar job '{jobName}'");
+
+        if (success)
         {
-            var success = await JobScheduler.StopJobAsync(jobName);
-            if (success)
-            {
-                Snackbar.Add($"Job '{jobName}' parado com sucesso!", Severity.Success);
-                await LoadJobsAsync();
-            }
-            else
-            {
-                Snackbar.Add($"Falha ao parar o job '{jobName}'", Severity.Error);
-            }
+            ShowSuccess($"Job '{jobName}' parado com sucesso!");
+            await LoadJobsAsync();
         }
-        catch (Exception ex)
+        else
         {
-            Snackbar.Add($"Erro ao parar job: {ex.Message}", Severity.Error);
+            ShowError($"Falha ao parar o job '{jobName}'");
         }
     }
 
-    private void CreateJob() => Navigation.NavigateTo("/jobs/create");
-    private void EditJob(int id) => Navigation.NavigateTo($"/jobs/edit/{id}");
-    private void DeleteJob(int id) => Navigation.NavigateTo($"/jobs/delete/{id}");
-
-    private Color GetStatusColor(JobStatus status) => status switch
-    {
-        JobStatus.Rodando => Color.Info,
-        JobStatus.Completado => Color.Success,
-        JobStatus.Falhou => Color.Error,
-        JobStatus.Parado => Color.Warning,
-        JobStatus.Pendente => Color.Default,
-        _ => Color.Default
-    };
+    private void CreateJob() => NavigateTo("/jobs/create");
+    private void EditJob(int id) => NavigateTo($"/jobs/edit/{id}");
+    private void DeleteJob(int id) => NavigateTo($"/jobs/delete/{id}");
 
     private bool FilterFunc(Job job)
     {
-        if (string.IsNullOrWhiteSpace(searchString))
+        if (string.IsNullOrWhiteSpace(SearchString))
             return true;
 
-        return job.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Command.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Schedule.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Status.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase);
+        return job.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+               job.Command.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+               job.Schedule.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+               job.Status.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
     }
 }

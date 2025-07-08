@@ -1,4 +1,5 @@
 ﻿@using MudBlazor
+@inject NavigationManager NavigationManager
 
 <MudDrawerHeader Class="py-4">
     <MudText Typo="Typo.h5" Color="Color.Primary" Class="ml-2 font-weight-bold">Saigor</MudText>
@@ -7,12 +8,12 @@
 </MudDrawerHeader>
 
 <MudNavMenu Dense="true" Class="py-2">
-    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Dashboard" Match="NavLinkMatch.All" IconColor="Color.Primary">
+    <MudNavLink Icon="@Icons.Material.Filled.Dashboard" Match="NavLinkMatch.All" IconColor="Color.Primary" OnClick="GoDashboard">
         Dashboard
     </MudNavLink>
 
     <MudNavGroup Title="Gerenciamento" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary" Expanded="true">
-        <MudNavLink Href="/jobs" Icon="@Icons.Material.Filled.Work" IconColor="Color.Success">
+        <MudNavLink Icon="@Icons.Material.Filled.Work" IconColor="Color.Success" OnClick="GoJobs">
             Jobs
         </MudNavLink>
     </MudNavGroup>
@@ -44,4 +45,9 @@
         collapseNavMenu = !collapseNavMenu;
         await OnToggleNav.InvokeAsync();
     }
+
+    private void GoDashboard()
+        => NavigationManager.NavigateTo("/", true);
+    private void GoJobs()
+        => NavigationManager.NavigateTo("/jobs", true);
 }
