@@ -3,8 +3,13 @@ using MudBlazor.Services;
 using Quartz;
 using Saigor.Data;
 using Saigor.Services;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ------------------- Culture e Timezone -------------------
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("pt-BR");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("pt-BR");
 
 // ------------------- Logging -------------------
 builder.Logging.ClearProviders();
@@ -45,10 +50,15 @@ builder.Services.AddQuartzHostedService(options =>
 });
 
 // ------------------- Application Services -------------------
+builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<ILogRepository, LogRepository>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddTransient<ExecuteJob>();
+
+// Registrar JobSchedulerService como Singleton para IHostedService e IJobSchedulerService
 builder.Services.AddSingleton<JobSchedulerService>();
-// Não registre como HostedService se já está como Singleton e gerencia internamente
-// builder.Services.AddHostedService(provider => provider.GetRequiredService<JobSchedulerService>());
+builder.Services.AddHostedService<JobSchedulerService>(provider => provider.GetRequiredService<JobSchedulerService>());
+builder.Services.AddScoped<IJobSchedulerService>(provider => provider.GetRequiredService<JobSchedulerService>());
 
 var app = builder.Build();
 

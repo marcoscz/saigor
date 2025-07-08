@@ -33,9 +33,6 @@
                         <MudItem xs="12" sm="6">
                             <MudTextField Label="Agendamento (cron)" @bind-Value="job.Schedule" For="@(() => job.Schedule)" Required="true" HelperText="Formato: * * * * * (minuto hora dia mês dia-semana)" Disabled="@isProcessing" />
                         </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudTextField Label="Worker ID" @bind-Value="job.WorkerId" For="@(() => job.WorkerId)" Required="true" Disabled="@isProcessing" />
-                        </MudItem>
                     </MudGrid>
                     <MudCardActions Class="mt-4">
                         <MudButton ButtonType="ButtonType.Submit" 

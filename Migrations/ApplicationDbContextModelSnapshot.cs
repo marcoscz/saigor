@@ -15,7 +15,7 @@ namespace Saigor.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
 
             modelBuilder.Entity("Saigor.Models.Job", b =>
                 {
@@ -24,26 +24,31 @@ namespace Saigor.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Command")
+                        .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LastExecution")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Schedule")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("WorkerId")
+                    b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkerId");
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("Jobs");
                 });
@@ -61,50 +66,36 @@ namespace Saigor.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Output")
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("logs");
+                    b.HasIndex("ExecutionTime");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("Logs");
                 });
 
-            modelBuilder.Entity("Saigor.Models.Worker", b =>
+            modelBuilder.Entity("Saigor.Models.Log", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.HasOne("Saigor.Models.Job", "Job")
+                        .WithMany("Logs")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<DateTime>("LastExecution")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Workers");
+                    b.Navigation("Job");
                 });
 
             modelBuilder.Entity("Saigor.Models.Job", b =>
                 {
-                    b.HasOne("Saigor.Models.Worker", "Worker")
-                        .WithMany("Jobs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Worker");
-                });
-
-            modelBuilder.Entity("Saigor.Models.Worker", b =>
-                {
-                    b.Navigation("Jobs");
+                    b.Navigation("Logs");
                 });
 #pragma warning restore 612, 618
         }

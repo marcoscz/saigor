@@ -1,66 +1,158 @@
 ﻿@page "/logs/delete/{id:int}"
-@inject ApplicationDbContext DbContext
+@using MudBlazor
+@using Saigor.Shared
+@inject ILogRepository LogRepository
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<Delete> _logger
 
-<h3>Excluir Log</h3>
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="3" Class="mt-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Error">Excluir Log</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Confirme a exclusão do log de execução
+            </MudText>
+        </MudCardHeader>
+        
+        <MudCardContent>
+            @if (log != null)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">
+                    <MudText Typo="Typo.body1">
+                        Tem certeza que deseja excluir este log? Esta ação não pode ser desfeita.
+                    </MudText>
+                </MudAlert>
 
-<p>Tem certeza que deseja excluir este log?</p>
-
-@if (log != null)
-{
-    <p><strong>Job ID:</strong> @log.JobId</p>
-    <p><strong>Data:</strong> @log.ExecutionTime</p>
-    <p><strong>Status:</strong> @log.Status</p>
-
-    <button class="btn btn-danger" @onclick="Excluir">Excluir</button>
-    <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
-}
-else
-{
-    <p>@ErrorMessage</p>
-}
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" sm="6">
+                        <MudField Label="Job" Variant="Variant.Outlined">
+                            <MudText Typo="Typo.body1" Class="font-weight-medium">@log.Job?.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @log.JobId</MudText>
+                        </MudField>
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudField Label="Status" Variant="Variant.Outlined">
+                            <MudChip T="string" Color="@GetStatusColor(log.Status)" 
+                                     Variant="Variant.Filled" 
+                                     Size="Size.Small">
+                                @log.Status
+                            </MudChip>
+                        </MudField>
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudField Label="Data/Hora de Execução" Variant="Variant.Outlined">
+                            <MudText Typo="Typo.body1">
+                                @log.ExecutionTime.ToBrasiliaTimeString("dd/MM/yyyy HH:mm:ss")
+                            </MudText>
+                        </MudField>
+                    </MudItem>
+                </MudGrid>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">
+                    @errorMessage
+                </MudAlert>
+            }
+            else
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Class="ml-3">Carregando...</MudText>
+            }
+        </MudCardContent>
+        
+        <MudCardActions>
+            <MudSpacer />
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Secondary" 
+                      OnClick="Cancelar" 
+                      Disabled="@isProcessing"
+                      StartIcon="@Icons.Material.Filled.Cancel">
+                Cancelar
+            </MudButton>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Error" 
+                      OnClick="Excluir" 
+                      Disabled="@isProcessing"
+                      StartIcon="@Icons.Material.Filled.Delete">
+                @if (isProcessing)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                    <MudText Class="ms-2">Excluindo...</MudText>
+                }
+                else
+                {
+                    <MudText>Excluir</MudText>
+                }
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
 
 @code {
     [Parameter] public int id { get; set; }
     private Log? log;
     private bool isProcessing;
-    private string? ErrorMessage;
+    private string? errorMessage;
+    private bool isLoading = true;
 
-    /// <summary>
-    /// Inicializa o componente e carrega o log para exclusão.
-    /// </summary>
     protected override async Task OnInitializedAsync()
+    {
+        await LoadLogAsync();
+    }
+
+    private async Task LoadLogAsync()
     {
         try
         {
-            log = await Task.Run(() => DbContext.Logs.FirstOrDefault(l => l.Id == id));
+            isLoading = true;
+            var logs = await LogRepository.GetAllAsync();
+            log = logs.FirstOrDefault(l => l.Id == id);
+            
             if (log == null)
             {
-                ErrorMessage = "Log não encontrado.";
+                errorMessage = "Log não encontrado.";
+                Snackbar.Add("Log não encontrado", Severity.Warning);
+            }
+            else
+            {
+                _logger.LogInformation("Log {LogId} carregado para exclusão", id);
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Erro ao carregar log: {ex.Message}";
+            _logger.LogError(ex, "Erro ao carregar log {LogId} para exclusão", id);
+            errorMessage = $"Erro ao carregar log: {ex.Message}";
+            Snackbar.Add($"Erro ao carregar log: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
-    /// <summary>
-    /// Exclui o log do banco de dados.
-    /// </summary>
     private async Task Excluir()
     {
         if (isProcessing || log == null) return;
+        
         try
         {
             isProcessing = true;
-            DbContext.Logs.Remove(log);
-            await DbContext.SaveChangesAsync();
+            
+            await LogRepository.DeleteAsync(id);
+            
+            _logger.LogInformation("Log {LogId} excluído com sucesso", id);
+            Snackbar.Add("Log excluído com sucesso!", Severity.Success);
             Navigation.NavigateTo("/logs");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Erro ao excluir log: {ex.Message}";
+            _logger.LogError(ex, "Erro ao excluir log {LogId}", id);
+            errorMessage = $"Erro ao excluir log: {ex.Message}";
+            Snackbar.Add($"Erro ao excluir log: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -68,8 +160,13 @@ else
         }
     }
 
-    /// <summary>
-    /// Cancela a exclusão e retorna para a lista de logs.
-    /// </summary>
     private void Cancelar() => Navigation.NavigateTo("/logs");
+
+    private Color GetStatusColor(string? status) => status switch
+    {
+        "Completado" => Color.Success,
+        "Falhou" => Color.Error,
+        "Rodando" => Color.Info,
+        _ => Color.Default
+    };
 }

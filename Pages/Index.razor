@@ -1,19 +1,365 @@
 ﻿@page "/"
 @using MudBlazor
+@using Saigor.Shared
+@inject IDashboardService DashboardService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<Index> _logger
 
-<PageTitle>Início</PageTitle>
+<PageTitle>Dashboard - Saigor</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center justify-center" Style="min-height:60vh;">
-    <MudPaper Elevation="2" Class="p-6 text-center w-100" Style="max-width:500px; margin:auto;">
-        <MudText Typo="Typo.h4" GutterBottom="true">Bem-vindo ao Sistema de Gerenciamento de Jobs!</MudText>
-        <MudText Typo="Typo.subtitle1" Class="mb-4">Gerencie Jobs, Workers e Logs de forma moderna e eficiente.</MudText>
-        <MudGrid Spacing="2" Justify="Justify.Center">
-            <MudItem xs="12" sm="6">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/jobs" StartIcon="@Icons.Material.Filled.Work" FullWidth="true">Ver Jobs</MudButton>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h3" Class="mb-4" Color="Color.Primary">Dashboard</MudText>
+
+    @if (isLoading)
+    {
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Class="ml-3">Carregando estatísticas...</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Estatísticas Gerais -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Primary" Size="Size.Large" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@statistics.TotalJobs</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total de Jobs</MudText>
+                </MudPaper>
             </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/workers" StartIcon="@Icons.Material.Filled.People" FullWidth="true">Ver Workers</MudButton>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Success" Size="Size.Large" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@statistics.JobsRunning</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Jobs Ativos</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Assessment" Color="Color.Info" Size="Size.Large" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@statistics.TotalLogs</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total de Execuções</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Warning" Size="Size.Large" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@statistics.SuccessRate.ToString("F1")%</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Taxa de Sucesso</MudText>
+                </MudPaper>
             </MudItem>
         </MudGrid>
-    </MudPaper>
+
+        <!-- Gráficos e Estatísticas -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Jobs por Status</MudText>
+                    @if (jobsByStatus.Any())
+                    {
+                        <MudList T="KeyValuePair<JobStatus, int>" Dense="true">
+                            @foreach (var item in jobsByStatus)
+                            {
+                                <MudListItem T="KeyValuePair<JobStatus, int>">
+                                    <MudChip T="string" Color="@GetStatusColor(item.Key)" Size="Size.Small" Class="mr-2">
+                                        @item.Key
+                                    </MudChip>
+                                    <MudText Typo="Typo.body2">@item.Value jobs</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Nenhum job encontrado</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Execuções por Status</MudText>
+                    @if (logsByStatus.Any())
+                    {
+                        <MudList T="KeyValuePair<string, int>" Dense="true">
+                            @foreach (var item in logsByStatus)
+                            {
+                                <MudListItem T="KeyValuePair<string, int>">
+                                    <MudChip T="string" Color="@GetLogStatusColor(item.Key)" Size="Size.Small" Class="mr-2">
+                                        @item.Key
+                                    </MudChip>
+                                    <MudText Typo="Typo.body2">@item.Value execuções</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Nenhuma execução encontrada</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Jobs Recentes -->
+        <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-3">Jobs Recentes</MudText>
+            @if (recentJobs.Any())
+            {
+                <MudTable Items="recentJobs" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Nome</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Última Execução</MudTh>
+                        <MudTh>Ações</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Nome">@context.Name</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
+                                @context.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Última Execução">
+                            @if (context.LastExecution.HasValue)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @context.LastExecution.Value.ToBrasiliaTimeString()
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Nunca executado
+                                </MudText>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Ações">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                         OnClick="@(() => EditJob(context.Id))" 
+                                         Size="Size.Small" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Nenhum job encontrado</MudText>
+            }
+        </MudPaper>
+
+        <!-- Logs Recentes -->
+        <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-3">Execuções Recentes</MudText>
+            @if (recentLogs.Any())
+            {
+                <MudTable Items="recentLogs" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Job</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Data/Hora</MudTh>
+                        <MudTh>Saída</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Job">@context.Job?.Name</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@GetLogStatusColor(context.Status)" Size="Size.Small">
+                                @context.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Data/Hora">
+                            <MudText Typo="Typo.body2">
+                                @context.ExecutionTime.ToBrasiliaTimeString()
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Saída">
+                            <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">
+                                @context.Output
+                            </MudText>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Nenhuma execução encontrada</MudText>
+            }
+        </MudPaper>
+
+        <!-- Ações Rápidas -->
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-3">Ações Rápidas</MudText>
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudButton Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              OnClick="CreateJob" 
+                              StartIcon="@Icons.Material.Filled.Add" 
+                              FullWidth="true">
+                        Novo Job
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudButton Variant="Variant.Outlined" 
+                              Color="Color.Secondary" 
+                              OnClick="ViewJobs" 
+                              StartIcon="@Icons.Material.Filled.Work" 
+                              FullWidth="true">
+                        Ver Jobs
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudButton Variant="Variant.Outlined" 
+                              Color="Color.Info" 
+                              OnClick="ViewLogs" 
+                              StartIcon="@Icons.Material.Filled.Assessment" 
+                              FullWidth="true">
+                        Ver Logs
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudButton Variant="Variant.Outlined" 
+                              Color="Color.Warning" 
+                              OnClick="RefreshDashboard" 
+                              StartIcon="@Icons.Material.Filled.Refresh" 
+                              FullWidth="true">
+                        Atualizar
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
 </MudContainer>
+
+@code {
+    private DashboardStatistics statistics = new();
+    private IEnumerable<Job> recentJobs = new List<Job>();
+    private IEnumerable<Log> recentLogs = new List<Log>();
+    private Dictionary<JobStatus, int> jobsByStatus = new();
+    private Dictionary<string, int> logsByStatus = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardAsync();
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Carregar dados de forma mais robusta
+            await LoadStatisticsAsync();
+            await LoadRecentJobsAsync();
+            await LoadRecentLogsAsync();
+            await LoadJobsByStatusAsync();
+            await LoadLogsByStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar dashboard: {ex.Message}", Severity.Error);
+            _logger.LogError(ex, "Erro ao carregar dashboard");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        try
+        {
+            statistics = await DashboardService.GetStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar estatísticas");
+            statistics = new DashboardStatistics();
+        }
+    }
+
+    private async Task LoadRecentJobsAsync()
+    {
+        try
+        {
+            recentJobs = await DashboardService.GetRecentJobsAsync(5);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar jobs recentes");
+            recentJobs = new List<Job>();
+        }
+    }
+
+    private async Task LoadRecentLogsAsync()
+    {
+        try
+        {
+            recentLogs = await DashboardService.GetRecentLogsAsync(5);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar logs recentes");
+            recentLogs = new List<Log>();
+        }
+    }
+
+    private async Task LoadJobsByStatusAsync()
+    {
+        try
+        {
+            jobsByStatus = await DashboardService.GetJobsByStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar jobs por status");
+            jobsByStatus = new Dictionary<JobStatus, int>();
+        }
+    }
+
+    private async Task LoadLogsByStatusAsync()
+    {
+        try
+        {
+            logsByStatus = await DashboardService.GetLogsByStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar logs por status");
+            logsByStatus = new Dictionary<string, int>();
+        }
+    }
+
+    private async Task RefreshDashboard()
+    {
+        await LoadDashboardAsync();
+        Snackbar.Add("Dashboard atualizado!", Severity.Success);
+    }
+
+    private void CreateJob() => Navigation.NavigateTo("/jobs/create");
+    private void ViewJobs() => Navigation.NavigateTo("/jobs");
+    private void ViewLogs() => Navigation.NavigateTo("/logs");
+    private void EditJob(int id) => Navigation.NavigateTo($"/jobs/edit/{id}");
+
+    private Color GetStatusColor(JobStatus status) => status switch
+    {
+        JobStatus.Rodando => Color.Success,
+        JobStatus.Completado => Color.Info,
+        JobStatus.Falhou => Color.Error,
+        JobStatus.Parado => Color.Warning,
+        JobStatus.Pendente => Color.Default,
+        _ => Color.Default
+    };
+
+    private Color GetLogStatusColor(string? status) => status switch
+    {
+        "Completado" => Color.Success,
+        "Falhou" => Color.Error,
+        "Rodando" => Color.Info,
+        _ => Color.Default
+    };
+}

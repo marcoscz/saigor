@@ -21,8 +21,6 @@ namespace Saigor.Models
 
         [Required(ErrorMessage = "Agendamento é obrigatório")]
         [StringLength(100, ErrorMessage = "Agendamento não pode ter mais que 100 caracteres")]
-        [RegularExpression(@"^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\*|([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])) (\*|([1-9]|1[0-2])) (\*|([0-6]))$",
-            ErrorMessage = "Formato de Cron inválido")]
         [Display(Name = "Agendamento")]
         public string Schedule { get; set; } = string.Empty;
 
@@ -32,24 +30,10 @@ namespace Saigor.Models
         [Display(Name = "Status")]
         public JobStatus Status { get; set; } = JobStatus.Rodando;
 
-        [Required(ErrorMessage = "Worker é obrigatório")]
-        [Display(Name = "Worker")]
-        public int WorkerId { get; set; }
-
-        /// <summary>
-        /// Navegação para o Worker relacionado.
-        /// </summary>
-        public virtual Worker Worker { get; set; } = null!;
-
         /// <summary>
         /// Logs de execução deste job.
         /// </summary>
         public virtual ICollection<Log> Logs { get; set; } = [];
-
-        /// <summary>
-        /// Serviços relacionados a este job.
-        /// </summary>
-        public virtual ICollection<Service> Services { get; set; } = [];
     }
 
     /// <summary>
