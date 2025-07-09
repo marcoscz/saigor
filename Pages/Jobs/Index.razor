@@ -135,6 +135,8 @@
         {
             var jobsEnumerable = await JobRepository.GetAllAsync();
             jobs = jobsEnumerable.ToList();
+            
+
         }, "Erro ao carregar jobs");
     }
 
