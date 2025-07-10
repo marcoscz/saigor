@@ -16,6 +16,10 @@
         <MudNavLink Icon="@Icons.Material.Filled.Work" IconColor="Color.Success" OnClick="GoJobs">
             Jobs
         </MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Filled.Storage" IconColor="Color.Info" OnClick="GoConexoes">
+            Conexões
+        </MudNavLink>
+
     </MudNavGroup>
 
     <MudNavGroup Title="Monitoramento" Icon="@Icons.Material.Filled.Timeline" IconColor="Color.Primary" Expanded="true">
@@ -50,4 +54,7 @@
         => NavigationManager.NavigateTo("/", true);
     private void GoJobs()
         => NavigationManager.NavigateTo("/jobs", true);
+    private void GoConexoes()
+        => NavigationManager.NavigateTo("/conexoes", true);
+
 }

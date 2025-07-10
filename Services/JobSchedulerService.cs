@@ -1,31 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Quartz;
+﻿using Quartz;
 using Quartz.Spi;
-using Saigor.Data;
 using Saigor.Models;
 using System.Diagnostics;
 
 namespace Saigor.Services
 {
-    public class JobSchedulerService : IJobSchedulerService, IHostedService
+    public class JobSchedulerService(
+        ISchedulerFactory schedulerFactory,
+        IServiceProvider serviceProvider,
+        IServiceScopeFactory scopeFactory,
+        ILogger<JobSchedulerService> logger) : IJobSchedulerService, IHostedService
     {
-        private readonly ISchedulerFactory _schedulerFactory;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<JobSchedulerService> _logger;
+        private readonly ISchedulerFactory _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
+        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+        private readonly ILogger<JobSchedulerService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private IScheduler? _scheduler;
-
-        public JobSchedulerService(
-            ISchedulerFactory schedulerFactory, 
-            IServiceProvider serviceProvider, 
-            IServiceScopeFactory scopeFactory,
-            ILogger<JobSchedulerService> logger)
-        {
-            _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
 
         /// <summary>
         /// Inicia o job especificado pelo nome.
@@ -43,10 +33,10 @@ namespace Saigor.Services
             try
             {
                 _logger.LogInformation("Tentando iniciar job {JobName}", jobName);
-                
+
                 using var scope = _scopeFactory.CreateScope();
                 var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
-                
+
                 var job = await jobRepository.GetByNameAsync(jobName);
                 if (job == null)
                 {
@@ -65,7 +55,7 @@ namespace Saigor.Services
 
                 var jobKey = new JobKey(job.Name);
                 var jobExists = await scheduler.CheckExists(jobKey);
-                
+
                 _logger.LogInformation("Job {JobName} já existe no scheduler: {Exists}", jobName, jobExists);
 
                 if (jobExists)
@@ -87,10 +77,10 @@ namespace Saigor.Services
                     .Build();
 
                 await scheduler.ScheduleJob(jobDetail, trigger);
-                
+
                 job.Status = JobStatus.Rodando;
                 await jobRepository.UpdateAsync(job);
-                
+
                 _logger.LogInformation("Job {JobName} iniciado com sucesso", jobName);
                 return true;
             }
@@ -124,26 +114,26 @@ namespace Saigor.Services
             try
             {
                 _logger.LogInformation("Tentando parar job {JobName}", jobName);
-                
+
                 var jobKey = new JobKey(jobName);
                 var jobExists = await _scheduler.CheckExists(jobKey, cancellationToken);
-                
+
                 _logger.LogInformation("Job {JobName} existe no scheduler: {Exists}", jobName, jobExists);
-                
+
                 if (jobExists)
                 {
                     // Pausa o job primeiro
                     await _scheduler.PauseJob(jobKey, cancellationToken);
                     _logger.LogInformation("Job {JobName} pausado", jobName);
-                    
+
                     // Remove o job do scheduler
                     var deleted = await _scheduler.DeleteJob(jobKey, cancellationToken);
                     _logger.LogInformation("Job {JobName} removido do scheduler: {Deleted}", jobName, deleted);
-                    
+
                     // Atualiza o status no banco de dados
                     using var scope = _scopeFactory.CreateScope();
                     var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
-                    
+
                     var job = await jobRepository.GetByNameAsync(jobName);
                     if (job != null)
                     {
@@ -155,13 +145,13 @@ namespace Saigor.Services
                     {
                         _logger.LogWarning("Job {JobName} não encontrado no banco de dados", jobName);
                     }
-                    
+
                     _logger.LogInformation("Job {JobName} parado com sucesso", jobName);
                     return true;
                 }
 
                 _logger.LogWarning("Job {JobName} não encontrado no scheduler", jobName);
-                
+
                 // Mesmo que não esteja no scheduler, atualiza o status no banco
                 using var scope2 = _scopeFactory.CreateScope();
                 var jobRepository2 = scope2.ServiceProvider.GetRequiredService<IJobRepository>();
@@ -173,7 +163,7 @@ namespace Saigor.Services
                     _logger.LogInformation("Status do job {JobName} atualizado para Parado (não estava no scheduler)", jobName);
                     return true;
                 }
-                
+
                 return false;
             }
             catch (Exception ex)
@@ -194,7 +184,7 @@ namespace Saigor.Services
             {
                 using var scope = _scopeFactory.CreateScope();
                 var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
-                
+
                 var job = await jobRepository.GetByNameAsync(jobName);
                 return job?.Status.ToString();
             }
@@ -278,18 +268,18 @@ namespace Saigor.Services
 
                 await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
                 job.Status = JobStatus.Rodando;
-                
+
                 using var scope = _scopeFactory.CreateScope();
                 var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
                 await jobRepository.UpdateAsync(job);
-                
+
                 _logger.LogInformation("Job {JobName} agendado com sucesso", job.Name);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao agendar job {JobName}", job.Name);
                 job.Status = JobStatus.Falhou;
-                
+
                 using var scope = _scopeFactory.CreateScope();
                 var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
                 await jobRepository.UpdateAsync(job);
@@ -310,14 +300,9 @@ namespace Saigor.Services
         }
     }
 
-    public class JobFactory : IJobFactory
+    public class JobFactory(IServiceProvider serviceProvider) : IJobFactory
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public JobFactory(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
@@ -335,16 +320,10 @@ namespace Saigor.Services
         }
     }
 
-    public class ScopedJobWrapper : IJob
+    public class ScopedJobWrapper(IJob innerJob, IServiceScope scope) : IJob
     {
-        public IJob InnerJob { get; }
-        public IServiceScope Scope { get; }
-
-        public ScopedJobWrapper(IJob innerJob, IServiceScope scope)
-        {
-            InnerJob = innerJob;
-            Scope = scope;
-        }
+        public IJob InnerJob { get; } = innerJob;
+        public IServiceScope Scope { get; } = scope;
 
         public Task Execute(IJobExecutionContext context)
         {
@@ -353,26 +332,20 @@ namespace Saigor.Services
     }
 
     [DisallowConcurrentExecution]
-    public class ExecuteJob : IJob
+    public class ExecuteJob(IServiceScopeFactory scopeFactory, ILogger<ExecuteJob> logger) : IJob
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<ExecuteJob> _logger;
-
-        public ExecuteJob(IServiceScopeFactory scopeFactory, ILogger<ExecuteJob> logger)
-        {
-            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+        private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+        private readonly ILogger<ExecuteJob> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         public async Task Execute(IJobExecutionContext context)
         {
             var jobId = context.JobDetail.JobDataMap.GetInt("JobId");
             var startTime = DateTime.UtcNow;
-            
+
             using var scope = _scopeFactory.CreateScope();
             var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
             var logRepository = scope.ServiceProvider.GetRequiredService<ILogRepository>();
-            
+
             var job = await jobRepository.GetByIdAsync(jobId);
 
             if (job == null)
@@ -391,7 +364,7 @@ namespace Saigor.Services
 
                 var output = await CommandExecutor.RunCommandAsync(job.Command);
                 var executionTime = DateTime.UtcNow - startTime;
-                
+
                 job.Status = JobStatus.Completado;
                 await jobRepository.UpdateAsync(job);
 
@@ -406,7 +379,7 @@ namespace Saigor.Services
 
                 await logRepository.AddAsync(log);
 
-                _logger.LogInformation("Job {JobName} executado com sucesso em {ExecutionTime}ms", 
+                _logger.LogInformation("Job {JobName} executado com sucesso em {ExecutionTime}ms",
                     job.Name, executionTime.TotalMilliseconds);
             }
             catch (Exception ex)
@@ -425,7 +398,7 @@ namespace Saigor.Services
 
                 await logRepository.AddAsync(log);
 
-                _logger.LogError(ex, "Erro ao executar job {JobName} após {ExecutionTime}ms", 
+                _logger.LogError(ex, "Erro ao executar job {JobName} após {ExecutionTime}ms",
                     job.Name, executionTime.TotalMilliseconds);
             }
         }

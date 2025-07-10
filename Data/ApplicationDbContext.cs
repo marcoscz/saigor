@@ -26,6 +26,11 @@ public class ApplicationDbContext : DbContext
     /// Logs de execução.
     /// </summary>
     public DbSet<Log> Logs => Set<Log>();
+
+    /// <summary>
+    /// Conexões de banco de dados.
+    /// </summary>
+    public DbSet<ConexaoModel> Conexoes => Set<ConexaoModel>();
     #endregion
 
     /// <summary>
@@ -64,6 +69,21 @@ public class ApplicationDbContext : DbContext
                 .WithMany(j => j.Logs)
                 .HasForeignKey(l => l.JobId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuração da Conexao
+        modelBuilder.Entity<ConexaoModel>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Conector);
+            entity.HasIndex(e => e.Ambiente);
+            entity.HasIndex(e => e.Ativo);
+
+            entity.Property(e => e.Conector).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Servidor).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Ambiente).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Nome).HasMaxLength(100);
+            entity.Property(e => e.Descricao).HasMaxLength(500);
         });
     }
 }
