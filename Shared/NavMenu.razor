@@ -19,7 +19,12 @@
         <MudNavLink Icon="@Icons.Material.Filled.Storage" IconColor="Color.Info" OnClick="GoConexoes">
             Conexões
         </MudNavLink>
-
+        <MudNavLink Icon="@Icons.Material.Filled.Assignment" IconColor="Color.Warning" OnClick="GoTarefas">
+            Tarefas
+        </MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Filled.Link" IconColor="Color.Secondary" OnClick="GoJobTarefas">
+            Job-Tarefa
+        </MudNavLink>
     </MudNavGroup>
 
     <MudNavGroup Title="Monitoramento" Icon="@Icons.Material.Filled.Timeline" IconColor="Color.Primary" Expanded="true">
@@ -56,5 +61,9 @@
         => NavigationManager.NavigateTo("/jobs", true);
     private void GoConexoes()
         => NavigationManager.NavigateTo("/conexoes", true);
+    private void GoTarefas()
+        => NavigationManager.NavigateTo("/tarefas", true);
+    private void GoJobTarefas()
+        => NavigationManager.NavigateTo("/job-tarefas", true);
 
 }

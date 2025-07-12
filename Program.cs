@@ -53,6 +53,8 @@ builder.Services.AddQuartzHostedService(options =>
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IConexaoRepository, ConexaoRepository>();
+builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
+builder.Services.AddScoped<IJobTarefaRepository, JobTarefaRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddTransient<ExecuteJob>();
 

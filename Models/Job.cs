@@ -34,6 +34,11 @@ namespace Saigor.Models
         /// Logs de execução deste job.
         /// </summary>
         public virtual ICollection<Log> Logs { get; set; } = [];
+
+        /// <summary>
+        /// Associações com tarefas.
+        /// </summary>
+        public virtual ICollection<JobTarefa> JobTarefas { get; set; } = [];
     }
 
     /// <summary>
