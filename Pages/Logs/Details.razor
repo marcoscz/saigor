@@ -28,11 +28,7 @@
                     
                     <MudItem xs="12" sm="6">
                         <MudField Label="Status" Variant="Variant.Outlined">
-                            <MudChip T="string" Color="@GetStatusColor(log.Status)" 
-                                     Variant="Variant.Filled" 
-                                     Size="Size.Small">
-                                @log.Status
-                            </MudChip>
+                            <StatusChip LogStatus="@log.Status" />
                         </MudField>
                     </MudItem>
                     

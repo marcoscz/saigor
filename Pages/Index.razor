@@ -117,9 +117,7 @@
                     <RowTemplate>
                         <MudTd DataLabel="Nome">@context.Name</MudTd>
                         <MudTd DataLabel="Status">
-                            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
-                                @context.Status
-                            </MudChip>
+                            <StatusChip JobStatus="context.Status" />
                         </MudTd>
                         <MudTd DataLabel="Última Execução">
                             @if (context.LastExecution.HasValue)
@@ -164,9 +162,7 @@
                     <RowTemplate>
                         <MudTd DataLabel="Job">@context.Job?.Name</MudTd>
                         <MudTd DataLabel="Status">
-                            <MudChip T="string" Color="@GetLogStatusColor(context.Status)" Size="Size.Small">
-                                @context.Status
-                            </MudChip>
+                            <StatusChip LogStatus="@context.Status" />
                         </MudTd>
                         <MudTd DataLabel="Data/Hora">
                             <MudText Typo="Typo.body2">

@@ -88,11 +88,7 @@
                         </MudText>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@GetStatusColor(context.Status)" 
-                             Variant="Variant.Filled" 
-                             Size="Size.Small">
-                        @context.Status
-                    </MudChip>
+                    <StatusChip LogStatus="@context.Status" />
                 </MudTd>
                 <MudTd DataLabel="Saída">
                     <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">

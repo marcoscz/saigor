@@ -2,6 +2,7 @@
 using Quartz.Spi;
 using Saigor.Models;
 using System.Diagnostics;
+using Saigor.Shared;
 
 namespace Saigor.Services
 {
@@ -401,27 +402,6 @@ namespace Saigor.Services
                 _logger.LogError(ex, "Erro ao executar job {JobName} após {ExecutionTime}ms",
                     job.Name, executionTime.TotalMilliseconds);
             }
-        }
-    }
-
-    public static class CommandExecutor
-    {
-        public static async Task<string> RunCommandAsync(string command)
-        {
-            using var process = new Process();
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = $"/c {command}";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
-
-            process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            return string.IsNullOrEmpty(error) ? output : $"Erro: {error}\nSaída: {output}";
         }
     }
 }
