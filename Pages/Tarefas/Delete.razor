@@ -1,0 +1,94 @@
+@page "/tarefas/delete/{id:int}"
+@using MudBlazor
+@inject ITarefaRepository TarefaRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Error">Excluir Tarefa</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoading)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                <MudText Class="ml-3">Carregando...</MudText>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Class="mt-2">Voltar</MudButton>
+            }
+            else if (tarefa != null)
+            {
+                <MudText>Tem certeza que deseja excluir a tarefa <strong>@tarefa.Nome</strong>?</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-2">Esta ação não pode ser desfeita.</MudText>
+            }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Excluir" Disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" />
+                    <span class="ml-2">Excluindo...</span>
+                }
+                else
+                {
+                    <span>Excluir</span>
+                }
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Disabled="@isProcessing">Cancelar</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private TarefaModel? tarefa;
+    private bool isLoading = true;
+    private bool isProcessing;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            tarefa = (await TarefaRepository.GetAllAsync()).FirstOrDefault(t => t.Id == id);
+            if (tarefa == null)
+                errorMessage = "Tarefa não encontrada.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar tarefa: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Excluir()
+    {
+        if (isProcessing || tarefa == null) return;
+        try
+        {
+            isProcessing = true;
+            TarefaRepository.Remove(tarefa);
+            await TarefaRepository.SaveChangesAsync();
+            Snackbar.Add("Tarefa excluída com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/tarefas");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao excluir tarefa: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Cancelar() => Navigation.NavigateTo("/tarefas");
+} 

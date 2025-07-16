@@ -162,7 +162,7 @@
                     <RowTemplate>
                         <MudTd DataLabel="Job">@context.Job?.Name</MudTd>
                         <MudTd DataLabel="Status">
-                            <StatusChip LogStatus="@context.Status" />
+                            <StatusChip JobStatus="@((JobStatus)(string.IsNullOrEmpty(context.Status) ? JobStatus.Pendente : Enum.Parse(typeof(JobStatus), context.Status)))" />
                         </MudTd>
                         <MudTd DataLabel="Data/Hora">
                             <MudText Typo="Typo.body2">
@@ -282,7 +282,7 @@
     {
         try
         {
-            recentJobs = await DashboardService.GetRecentJobsAsync(5);
+            recentJobs = await DashboardService.GetRecentJobsAsync();
         }
         catch (Exception ex)
         {
@@ -295,7 +295,7 @@
     {
         try
         {
-            recentLogs = await DashboardService.GetRecentLogsAsync(5);
+            recentLogs = (await DashboardService.GetRecentLogsAsync()).OrderByDescending(l => l.ExecutionTime).ToList();
         }
         catch (Exception ex)
         {
@@ -308,7 +308,7 @@
     {
         try
         {
-            jobsByStatus = await DashboardService.GetJobsByStatusAsync();
+            jobsByStatus = await DashboardService.GetJobsCountByStatusAsync();
         }
         catch (Exception ex)
         {

@@ -1,0 +1,96 @@
+@using MudBlazor
+@using Saigor.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@Job" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Nome do Job"
+                          @bind-Value="Job.Name"
+                          For="@(() => Job.Name)"
+                          Required="true"
+                          Immediate="true"
+                          Disabled="@IsProcessing"
+                          HelperText="Nome único para identificar o job" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudSelect T="JobStatus"
+                       Label="Status"
+                       @bind-Value="Job.Status"
+                       For="@(() => Job.Status)"
+                       Disabled="@IsProcessing">
+                <MudSelectItem Value="@JobStatus.Pendente">Pendente</MudSelectItem>
+                <MudSelectItem Value="@JobStatus.Rodando">Rodando</MudSelectItem>
+                <MudSelectItem Value="@JobStatus.Parado">Parado</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Comando"
+                          @bind-Value="Job.Command"
+                          For="@(() => Job.Command)"
+                          Required="true"
+                          Lines="3"
+                          Immediate="true"
+                          Disabled="@IsProcessing"
+                          HelperText="Comando a ser executado (ex: dir, echo 'Hello World')" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Agendamento (Cron)"
+                          @bind-Value="Job.Schedule"
+                          For="@(() => Job.Schedule)"
+                          Required="true"
+                          Immediate="true"
+                          Disabled="@IsProcessing"
+                          HelperText="Formato: * * * * * (minuto hora dia mês dia-semana)" />
+            <MudExpansionPanels Class="mt-2">
+                <MudExpansionPanel Text="Exemplos de Cron">
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.body2">
+                                <strong>0 0 * * *</strong> - Todo dia à meia-noite
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.body2">
+                                <strong>0 */6 * * *</strong> - A cada 6 horas
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.body2">
+                                <strong>*/15 * * * *</strong> - A cada 15 minutos
+                            </MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.body2">
+                                <strong>0 9 * * 1</strong> - Toda segunda às 9h
+                            </MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </MudItem>
+    </MudGrid>
+    <MudCardActions Class="mt-4">
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(async () => await OnCancel.InvokeAsync())" Disabled="@IsProcessing">Cancelar</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsProcessing" StartIcon="@Icons.Material.Filled.Save">
+            @if (IsProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Salvando...</MudText>
+            }
+            else
+            {
+                <MudText>Salvar Job</MudText>
+            }
+        </MudButton>
+    </MudCardActions>
+</EditForm>
+
+@code {
+    [Parameter] public Job Job { get; set; } = new();
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+} 

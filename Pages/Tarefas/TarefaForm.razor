@@ -1,0 +1,46 @@
+@using MudBlazor
+@using Saigor.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@Tarefa" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Nome da Tarefa" @bind-Value="Tarefa.Nome" Required="true" Immediate="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Função" @bind-Value="Tarefa.Funcao" Required="true" Immediate="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Parâmetros" @bind-Value="Tarefa.Parametros" Immediate="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudSelect T="string" Label="Status" @bind-Value="Tarefa.Status" Disabled="@IsProcessing">
+                <MudSelectItem Value='@( "Ativo" )'>Ativo</MudSelectItem>
+                <MudSelectItem Value='@( "Inativo" )'>Inativo</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+    <MudCardActions Class="mt-4">
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(async () => await OnCancel.InvokeAsync())" Disabled="@IsProcessing">Cancelar</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsProcessing" StartIcon="@Icons.Material.Filled.Save">
+            @if (IsProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Salvando...</MudText>
+            }
+            else
+            {
+                <MudText>Salvar Tarefa</MudText>
+            }
+        </MudButton>
+    </MudCardActions>
+</EditForm>
+
+@code {
+    [Parameter] public TarefaModel Tarefa { get; set; } = new();
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+} 

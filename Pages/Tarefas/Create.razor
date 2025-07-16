@@ -1,0 +1,46 @@
+@page "/tarefas/create"
+@using MudBlazor
+@inject ITarefaRepository TarefaRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="3" Class="mt-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary">Nova Tarefa</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Cadastre uma nova tarefa para execução</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <TarefaForm Tarefa="@tarefa" IsProcessing="@isProcessing" OnValidSubmit="SalvarAsync" OnCancel="Cancelar" />
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private TarefaModel tarefa = new() { DataCriacao = DateTime.UtcNow };
+    private bool isProcessing;
+
+    private async Task SalvarAsync()
+    {
+        if (isProcessing) return;
+        try
+        {
+            isProcessing = true;
+            await TarefaRepository.AddAsync(tarefa);
+            await TarefaRepository.SaveChangesAsync();
+            Snackbar.Add("Tarefa criada com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/tarefas");
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException != null ? $"{ex.Message} | {ex.InnerException.Message}" : ex.Message;
+            Snackbar.Add($"Erro ao salvar a tarefa: {message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Cancelar() => Navigation.NavigateTo("/tarefas");
+} 

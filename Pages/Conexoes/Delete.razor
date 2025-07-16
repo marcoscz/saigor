@@ -1,0 +1,100 @@
+@page "/conexoes/delete/{id:int}"
+@using Saigor.Models
+@inject IConexaoRepository ConexaoRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Error">Excluir Conexão</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Class="ml-3">Carregando...</MudText>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Class="mt-2">Voltar</MudButton>
+            }
+            else if (conexao != null)
+            {
+                <MudText>
+                    Tem certeza que deseja excluir a conexão <strong>@conexao.Nome</strong>?
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-2">
+                    Esta ação não pode ser desfeita.
+                </MudText>
+            }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Excluir" Disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" />
+                    <span class="ml-2">Excluindo...</span>
+                }
+                else
+                {
+                    <span>Excluir</span>
+                }
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" Disabled="@isProcessing">Cancelar</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private ConexaoModel? conexao;
+    private bool isLoading = true;
+    private bool isProcessing;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            conexao = await ConexaoRepository.GetByIdAsync(id);
+            if (conexao == null)
+            {
+                errorMessage = "Conexão não encontrada.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar conexão: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Excluir()
+    {
+        if (isProcessing || conexao == null) return;
+        try
+        {
+            isProcessing = true;
+            ConexaoRepository.Remove(conexao);
+            await ConexaoRepository.SaveChangesAsync();
+            Snackbar.Add("Conexão excluída com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/conexoes");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao excluir conexão: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Cancelar() => Navigation.NavigateTo("/conexoes");
+} 

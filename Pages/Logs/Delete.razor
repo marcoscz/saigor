@@ -34,14 +34,14 @@
                     
                     <MudItem xs="12" sm="6">
                         <MudField Label="Status" Variant="Variant.Outlined">
-                            <StatusChip LogStatus="@log.Status" />
+                            <StatusChip JobStatus="@((JobStatus)(string.IsNullOrEmpty(log.Status) ? JobStatus.Pendente : Enum.Parse(typeof(JobStatus), log.Status)))" />
                         </MudField>
                     </MudItem>
                     
                     <MudItem xs="12">
                         <MudField Label="Data/Hora de Execução" Variant="Variant.Outlined">
                             <MudText Typo="Typo.body1">
-                                @log.ExecutionTime.ToBrasiliaTimeString("dd/MM/yyyy HH:mm:ss")
+                                @log.ExecutionTime.ToBrasiliaTimeString()
                             </MudText>
                         </MudField>
                     </MudItem>

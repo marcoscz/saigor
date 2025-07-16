@@ -36,11 +36,6 @@ public class ApplicationDbContext : DbContext
     /// Tarefas do sistema.
     /// </summary>
     public DbSet<TarefaModel> Tarefas => Set<TarefaModel>();
-
-    /// <summary>
-    /// Associações entre Jobs e Tarefas.
-    /// </summary>
-    public DbSet<JobTarefa> JobTarefas => Set<JobTarefa>();
     #endregion
 
     /// <summary>
@@ -108,32 +103,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Funcao).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Parametros).HasMaxLength(1000);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-        });
-
-        // Configuração da JobTarefa
-        modelBuilder.Entity<JobTarefa>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.JobId);
-            entity.HasIndex(e => e.TarefaId);
-            entity.HasIndex(e => e.Ativo);
-
-            entity.Property(e => e.Observacoes).HasMaxLength(500);
-
-            // Relacionamento JobTarefa N:1 Job
-            entity.HasOne(jt => jt.Job)
-                .WithMany(j => j.JobTarefas)
-                .HasForeignKey(jt => jt.JobId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Relacionamento JobTarefa N:1 Tarefa
-            entity.HasOne(jt => jt.Tarefa)
-                .WithMany(t => t.JobTarefas)
-                .HasForeignKey(jt => jt.TarefaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Índice único para evitar duplicatas
-            entity.HasIndex(e => new { e.JobId, e.TarefaId }).IsUnique();
         });
     }
 }

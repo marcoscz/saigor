@@ -36,9 +36,6 @@ namespace Saigor.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Descricao")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -99,42 +96,6 @@ namespace Saigor.Migrations
                     b.ToTable("Jobs");
                 });
 
-            modelBuilder.Entity("Saigor.Models.JobTarefa", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Observacoes")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TarefaId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Ativo");
-
-                    b.HasIndex("JobId");
-
-                    b.HasIndex("TarefaId");
-
-                    b.HasIndex("JobId", "TarefaId")
-                        .IsUnique();
-
-                    b.ToTable("JobTarefas");
-                });
-
             modelBuilder.Entity("Saigor.Models.Log", b =>
                 {
                     b.Property<int>("Id")
@@ -176,9 +137,6 @@ namespace Saigor.Migrations
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("DataExecucao")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Funcao")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -209,25 +167,6 @@ namespace Saigor.Migrations
                     b.ToTable("Tarefas");
                 });
 
-            modelBuilder.Entity("Saigor.Models.JobTarefa", b =>
-                {
-                    b.HasOne("Saigor.Models.Job", "Job")
-                        .WithMany("JobTarefas")
-                        .HasForeignKey("JobId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Saigor.Models.TarefaModel", "Tarefa")
-                        .WithMany("JobTarefas")
-                        .HasForeignKey("TarefaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Job");
-
-                    b.Navigation("Tarefa");
-                });
-
             modelBuilder.Entity("Saigor.Models.Log", b =>
                 {
                     b.HasOne("Saigor.Models.Job", "Job")
@@ -241,14 +180,7 @@ namespace Saigor.Migrations
 
             modelBuilder.Entity("Saigor.Models.Job", b =>
                 {
-                    b.Navigation("JobTarefas");
-
                     b.Navigation("Logs");
-                });
-
-            modelBuilder.Entity("Saigor.Models.TarefaModel", b =>
-                {
-                    b.Navigation("JobTarefas");
                 });
 #pragma warning restore 612, 618
         }

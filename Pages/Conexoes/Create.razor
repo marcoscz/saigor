@@ -1,0 +1,47 @@
+@page "/conexoes/create"
+@using Saigor.Models
+@inject IConexaoRepository ConexaoRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="3" Class="mt-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary">Nova Conexão</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <ConexaoForm Conexao="@conexao" IsProcessing="@isProcessing" OnValidSubmit="SalvarAsync" OnCancel="Cancelar" />
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private ConexaoModel conexao = new();
+    private bool isProcessing;
+
+    private async Task SalvarAsync()
+    {
+        if (isProcessing) return;
+        try
+        {
+            isProcessing = true;
+            await ConexaoRepository.AddAsync(conexao);
+            await ConexaoRepository.SaveChangesAsync();
+            Snackbar.Add("Conexão criada com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/conexoes");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar a conexão: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/conexoes");
+    }
+} 

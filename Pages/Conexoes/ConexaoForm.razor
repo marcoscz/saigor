@@ -1,0 +1,50 @@
+@using Saigor.Models
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@Conexao" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Conector" @bind-Value="Conexao.Conector" Required="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Servidor" @bind-Value="Conexao.Servidor" Required="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Ambiente" @bind-Value="Conexao.Ambiente" Required="true" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Nome" @bind-Value="Conexao.Nome" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Descrição" @bind-Value="Conexao.Descricao" Disabled="@IsProcessing" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudSwitch T="bool" @bind-Checked="Conexao.Ativo" Color="Color.Primary" Disabled="@IsProcessing" Label="Ativo" />
+        </MudItem>
+    </MudGrid>
+    <MudCardActions Class="mt-4">
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(async () => await OnCancel.InvokeAsync())" Disabled="@IsProcessing">Cancelar</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsProcessing" StartIcon="@Icons.Material.Filled.Save">
+            @if (IsProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Salvando...</MudText>
+            }
+            else
+            {
+                <MudText>Salvar</MudText>
+            }
+        </MudButton>
+    </MudCardActions>
+</EditForm>
+
+@code {
+    [Parameter] public ConexaoModel Conexao { get; set; } = new();
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+} 

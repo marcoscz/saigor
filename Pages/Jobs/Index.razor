@@ -11,21 +11,12 @@
     <MudPaper Elevation="1" Class="pa-4 mb-4">
         <MudGrid>
             <MudItem xs="12" sm="6">
-                <MudButton Variant="Variant.Filled" 
-                          Color="Color.Primary" 
-                          OnClick="CreateJob" 
-                          StartIcon="@Icons.Material.Filled.Add" 
-                          FullWidth="true">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateJob" StartIcon="@Icons.Material.Filled.Add" FullWidth="true">
                     Novo Job
                 </MudButton>
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudButton Variant="Variant.Outlined" 
-                          Color="Color.Secondary" 
-                          OnClick="RefreshJobs" 
-                          StartIcon="@Icons.Material.Filled.Refresh" 
-                          FullWidth="true"
-                          Disabled="@IsLoading">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="RefreshJobs" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true" Disabled="@IsLoading">
                     Atualizar
                 </MudButton>
             </MudItem>
@@ -38,21 +29,9 @@
     }
     else
     {
-        <MudTable Items="jobs" 
-                  Hover="true" 
-                  Dense="true" 
-                  Elevation="1" 
-                  Class="mb-4"
-                  Loading="@IsLoading"
-                  Filter="new Func<Job,bool>(FilterFunc)">
+        <MudTable Items="jobs" Hover="true" Dense="true" Elevation="1" Class="mb-4" Loading="@IsLoading" Filter="FilterFunc">
             <ToolBarContent>
-                <MudTextField @bind-Value="SearchString" 
-                             Placeholder="Buscar jobs..." 
-                             Adornment="Adornment.Start" 
-                             AdornmentIcon="@Icons.Material.Filled.Search" 
-                             IconSize="Size.Medium" 
-                             Class="mt-0">
-                </MudTextField>
+                <MudTextField @bind-Value="SearchString" Placeholder="Buscar jobs..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Nome</MudTh>
@@ -67,52 +46,35 @@
                     <MudText Typo="Typo.body1" Class="font-weight-medium">@context.Name</MudText>
                 </MudTd>
                 <MudTd DataLabel="Comando">
-                    <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">
-                        @context.Command
-                    </MudText>
+                    <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">@context.Command</MudText>
                 </MudTd>
                 <MudTd DataLabel="Agendamento">
-                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
-                        @context.Schedule
-                    </MudChip>
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@context.Schedule</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <StatusChip JobStatus="context.Status" />
+                    <StatusChip JobStatus="@context.Status" />
                 </MudTd>
                 <MudTd DataLabel="Última Execução">
                     @if (context.LastExecution.HasValue)
                     {
-                        <MudText Typo="Typo.body2">
-                            @context.LastExecution.Value.ToBrasiliaTimeString()
-                        </MudText>
+                        <MudText Typo="Typo.body2">@context.LastExecution.Value.ToBrasiliaTimeString()</MudText>
                     }
                     else
                     {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            Nunca executado
-                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Nunca executado</MudText>
                     }
                 </MudTd>
                 <MudTd DataLabel="Ações">
-                    <MudButtonGroup Variant="Variant.Outlined" 
-                                   Size="Size.Small" 
-                                   Color="Color.Primary">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                                     OnClick="@(() => EditJob(context.Id))" />
-                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" 
-                                     OnClick="@(() => StartJob(context.Name))" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Stop" 
-                                     OnClick="@(() => StopJob(context.Name))" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                     OnClick="@(() => DeleteJob(context.Id))" 
-                                     Color="Color.Error" />
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditJob(context.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@(async () => await StartJob(context.Name))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Stop" OnClick="@(async () => await StopJob(context.Name))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteJob(context.Id))" Color="Color.Error" />
                     </MudButtonGroup>
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
-                <MudText Class="m-4" Color="Color.Secondary">
-                    Nenhum job encontrado.
-                </MudText>
+                <MudText Class="m-4" Color="Color.Secondary">Nenhum job encontrado.</MudText>
             </NoRecordsContent>
             <PagerContent>
                 <MudTablePager />
@@ -124,10 +86,7 @@
 @code {
     private List<Job> jobs = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadJobsAsync();
-    }
+    protected override async Task OnInitializedAsync() => await LoadJobsAsync();
 
     private async Task LoadJobsAsync()
     {
@@ -135,8 +94,6 @@
         {
             var jobsEnumerable = await JobRepository.GetAllAsync();
             jobs = jobsEnumerable.ToList();
-            
-
         }, "Erro ao carregar jobs");
     }
 
@@ -151,7 +108,6 @@
         var success = await ExecuteWithLoadingAsync(
             async () => await JobScheduler.StartJobAsync(jobName),
             $"Erro ao iniciar job '{jobName}'");
-
         if (success)
         {
             ShowSuccess($"Job '{jobName}' iniciado com sucesso!");
@@ -168,7 +124,6 @@
         var success = await ExecuteWithLoadingAsync(
             async () => await JobScheduler.StopJobAsync(jobName),
             $"Erro ao parar job '{jobName}'");
-
         if (success)
         {
             ShowSuccess($"Job '{jobName}' parado com sucesso!");
@@ -184,14 +139,10 @@
     private void EditJob(int id) => NavigateTo($"/jobs/edit/{id}");
     private void DeleteJob(int id) => NavigateTo($"/jobs/delete/{id}");
 
-    private bool FilterFunc(Job job)
-    {
-        if (string.IsNullOrWhiteSpace(SearchString))
-            return true;
-
-        return job.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Command.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Schedule.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
-               job.Status.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
-    }
+    private bool FilterFunc(Job job) =>
+        string.IsNullOrWhiteSpace(SearchString) ||
+        job.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+        job.Command.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+        job.Schedule.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+        job.Status.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
 }

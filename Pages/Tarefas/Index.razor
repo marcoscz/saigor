@@ -1,0 +1,92 @@
+@page "/tarefas"
+@using MudBlazor
+@inject ITarefaRepository TarefaRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4">Gerenciamento de Tarefas</MudText>
+
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTarefa" StartIcon="@Icons.Material.Filled.Add" FullWidth="true">
+                    Nova Tarefa
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="RefreshTarefas" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true" Disabled="@isLoading">
+                    Atualizar
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (isLoading)
+    {
+        <LoadingCard Message="Carregando tarefas..." />
+    }
+    else
+    {
+        <MudTable Items="tarefas" Hover="true" Dense="true" Elevation="1" Class="mb-4">
+            <HeaderContent>
+                <MudTh>Nome</MudTh>
+                <MudTh>Função</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                <MudTd DataLabel="Função">@context.Funcao</MudTd>
+                <MudTd DataLabel="Status">@context.Status</MudTd>
+                <MudTd DataLabel="Ações">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditTarefa(context.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteTarefa(context.Id))" Color="Color.Error" />
+                    </MudButtonGroup>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="m-4" Color="Color.Secondary">Nenhuma tarefa encontrada.</MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<TarefaModel> tarefas = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync() => await LoadTarefasAsync();
+
+    private async Task LoadTarefasAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var tarefasEnumerable = await TarefaRepository.GetAllAsync();
+            tarefas = tarefasEnumerable.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar tarefas: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RefreshTarefas()
+    {
+        await LoadTarefasAsync();
+        Snackbar.Add("Tarefas atualizadas com sucesso!", Severity.Success);
+    }
+
+    private void CreateTarefa() => Navigation.NavigateTo("/tarefas/create");
+    private void EditTarefa(int id) => Navigation.NavigateTo($"/tarefas/edit/{id}");
+    private void DeleteTarefa(int id) => Navigation.NavigateTo($"/tarefas/delete/{id}");
+} 

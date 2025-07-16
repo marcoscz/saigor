@@ -1,0 +1,84 @@
+@page "/conexoes/edit/{id:int}"
+@using Saigor.Models
+@inject IConexaoRepository ConexaoRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Editar Conexão</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Class="ml-3">Carregando...</MudText>
+            }
+            else
+            {
+                <ConexaoForm Conexao="@conexao" IsProcessing="@isProcessing" OnValidSubmit="SalvarAsync" OnCancel="Cancelar" />
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private ConexaoModel conexao = new();
+    private bool isLoading = true;
+    private bool isProcessing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var found = await ConexaoRepository.GetByIdAsync(id);
+            if (found is not null)
+                conexao = found;
+            else
+            {
+                Snackbar.Add("Conexão não encontrada.", Severity.Error);
+                Navigation.NavigateTo("/conexoes");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar conexão: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/conexoes");
+            return;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SalvarAsync()
+    {
+        if (isProcessing) return;
+        try
+        {
+            isProcessing = true;
+            ConexaoRepository.Update(conexao);
+            await ConexaoRepository.SaveChangesAsync();
+            Snackbar.Add("Conexão atualizada com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/conexoes");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao salvar a conexão: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/conexoes");
+    }
+} 

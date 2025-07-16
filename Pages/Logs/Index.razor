@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject ILogger<Index> _logger
+@inject IJobRepository JobRepository
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">Logs de Execução</MudText>
@@ -13,11 +14,12 @@
     <MudPaper Elevation="1" Class="pa-4 mb-4">
         <MudGrid>
             <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="string" Label="Status" @bind-Value="selectedStatus" Clearable="true">
-                    <MudSelectItem Value="@((string?)null)">Todos</MudSelectItem>
-                    <MudSelectItem Value="@("Completado")">Completado</MudSelectItem>
-                    <MudSelectItem Value="@("Falhou")">Falhou</MudSelectItem>
-                    <MudSelectItem Value="@("Rodando")">Rodando</MudSelectItem>
+                <MudSelect T="int?" Label="Job" @bind-Value="selectedJobId" Clearable="true">
+                    <MudSelectItem Value="@((int?)null)">Todos</MudSelectItem>
+                    @foreach (var job in jobs)
+                    {
+                        <MudSelectItem Value="@((int?)job.Id)">@job.Name</MudSelectItem>
+                    }
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
@@ -84,11 +86,11 @@
                 </MudTd>
                 <MudTd DataLabel="Data/Hora">
                                             <MudText Typo="Typo.body2">
-                            @context.ExecutionTime.ToBrasiliaTimeString("dd/MM/yyyy HH:mm:ss")
+                            @context.ExecutionTime.ToBrasiliaTimeString()
                         </MudText>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <StatusChip LogStatus="@context.Status" />
+                    <StatusChip JobStatus="@((JobStatus)(string.IsNullOrEmpty(context.Status) ? JobStatus.Pendente : Enum.Parse(typeof(JobStatus), context.Status)))" />
                 </MudTd>
                 <MudTd DataLabel="Saída">
                     <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">
@@ -122,13 +124,15 @@
 @code {
     private List<Log> logs = new();
     private List<Log> filteredLogs = new();
+    private List<Job> jobs = new();
     private bool isLoading = true;
     private string searchString = string.Empty;
-    private string? selectedStatus;
+    private int? selectedJobId;
     private DateRange? dateRange;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadJobsAsync();
         await LoadLogsAsync();
     }
 
@@ -139,7 +143,7 @@
             isLoading = true;
             var logsEnumerable = await LogRepository.GetAllAsync();
             logs = logsEnumerable.ToList();
-            filteredLogs = logs;
+            filteredLogs = logs.OrderByDescending(l => l.ExecutionTime).ToList();
             _logger.LogInformation("Carregados {Count} logs", logs.Count);
         }
         catch (Exception ex)
@@ -153,6 +157,12 @@
         }
     }
 
+    private async Task LoadJobsAsync()
+    {
+        var jobsEnumerable = await JobRepository.GetAllAsync();
+        jobs = jobsEnumerable.ToList();
+    }
+
     private async Task ApplyFilters()
     {
         try
@@ -161,15 +171,15 @@
             
             if (dateRange?.Start != null && dateRange?.End != null)
             {
-                filteredLogs = (await LogRepository.GetByDateRangeAsync(dateRange.Start.Value, dateRange.End.Value)).ToList();
+                filteredLogs = (await LogRepository.GetByDateRangeAsync(dateRange.Start.Value, dateRange.End.Value)).OrderByDescending(l => l.ExecutionTime).ToList();
             }
-            else if (!string.IsNullOrEmpty(selectedStatus))
+            else if (selectedJobId != null)
             {
-                filteredLogs = (await LogRepository.GetByStatusAsync(selectedStatus)).ToList();
+                filteredLogs = logs.Where(l => l.JobId == selectedJobId).OrderByDescending(l => l.ExecutionTime).ToList();
             }
             else
             {
-                filteredLogs = logs;
+                filteredLogs = logs.OrderByDescending(l => l.ExecutionTime).ToList();
             }
 
             // Aplicar filtro de texto se houver
@@ -197,7 +207,7 @@
 
     private void ClearFilters()
     {
-        selectedStatus = null;
+        selectedJobId = null;
         dateRange = null;
         searchString = string.Empty;
         filteredLogs = logs;

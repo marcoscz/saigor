@@ -1,16 +1,13 @@
-﻿@page "/jobs/edit/{id:int}"
+@page "/tarefas/edit/{id:int}"
 @using MudBlazor
-@using Saigor.Models
-@inject ApplicationDbContext DbContext
+@inject ITarefaRepository TarefaRepository
 @inject NavigationManager Navigation
-@inject ILogger<Edit> Logger
 @inject ISnackbar Snackbar
-@inject IJobRepository JobRepository
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
     <MudCard>
         <MudCardHeader>
-            <MudText Typo="Typo.h5">Editar Job</MudText>
+            <MudText Typo="Typo.h5">Editar Tarefa</MudText>
         </MudCardHeader>
         <MudCardContent>
             @if (isLoading)
@@ -22,7 +19,7 @@
             }
             else
             {
-                <JobForm Job="@job" IsProcessing="@isProcessing" OnValidSubmit="SalvarAsync" OnCancel="Cancelar" />
+                <TarefaForm Tarefa="@tarefa" IsProcessing="@isProcessing" OnValidSubmit="SalvarAsync" OnCancel="Cancelar" />
             }
         </MudCardContent>
     </MudCard>
@@ -30,7 +27,7 @@
 
 @code {
     [Parameter] public int id { get; set; }
-    private Job job = new();
+    private TarefaModel tarefa = new();
     private bool isLoading = true;
     private bool isProcessing;
 
@@ -39,21 +36,20 @@
         isLoading = true;
         try
         {
-            var found = await JobRepository.GetByIdAsync(id);
+            var found = (await TarefaRepository.GetAllAsync()).FirstOrDefault(t => t.Id == id);
             if (found is not null)
-                job = found;
+                tarefa = found;
             else
             {
-                Snackbar.Add("Job não encontrado.", Severity.Error);
-                Navigation.NavigateTo("/jobs");
+                Snackbar.Add("Tarefa não encontrada.", Severity.Error);
+                Navigation.NavigateTo("/tarefas");
                 return;
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Erro ao carregar job para edição: {Message}", ex.Message);
-            Snackbar.Add("Erro ao carregar job.", Severity.Error);
-            Navigation.NavigateTo("/jobs");
+            Snackbar.Add($"Erro ao carregar tarefa: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/tarefas");
             return;
         }
         finally
@@ -68,14 +64,15 @@
         try
         {
             isProcessing = true;
-            await JobRepository.UpdateAsync(job);
-            Snackbar.Add("Job salvo com sucesso!", Severity.Success);
-            Navigation.NavigateTo("/jobs");
+            TarefaRepository.Update(tarefa);
+            await TarefaRepository.SaveChangesAsync();
+            Snackbar.Add("Tarefa salva com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/tarefas");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Erro ao salvar job: {Message}", ex.Message);
-            Snackbar.Add("Erro ao salvar o job", Severity.Error);
+            var message = ex.InnerException != null ? $"{ex.Message} | {ex.InnerException.Message}" : ex.Message;
+            Snackbar.Add($"Erro ao salvar a tarefa: {message}", Severity.Error);
         }
         finally
         {
@@ -86,6 +83,6 @@
     private void Cancelar()
     {
         if (!isProcessing)
-            Navigation.NavigateTo("/jobs");
+            Navigation.NavigateTo("/tarefas");
     }
-}
+} 

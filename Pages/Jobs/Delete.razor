@@ -2,6 +2,7 @@
 @using MudBlazor
 @inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
+@inject IJobRepository JobRepository
 
 @if (isLoading)
 {
@@ -29,12 +30,8 @@ else if (job != null)
                 <MudText Typo="Typo.h5">Excluir Job</MudText>
             </MudCardHeader>
             <MudCardContent>
-                <MudText>
-                    Tem certeza que deseja excluir o job <strong>@job.Name</strong>?
-                </MudText>
-                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-2">
-                    Esta ação não pode ser desfeita.
-                </MudText>
+                <MudText>Tem certeza que deseja excluir o job <strong>@job.Name</strong>?</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-2">Esta ação não pode ser desfeita.</MudText>
             </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Excluir" Disabled="@isProcessing">
@@ -61,19 +58,14 @@ else if (job != null)
     private bool isProcessing;
     private string? ErrorMessage;
 
-    /// <summary>
-    /// Inicializa o componente e carrega o job para exclusão.
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
         try
         {
-            job = await DbContext.Jobs.FindAsync(id);
+            job = await JobRepository.GetByIdAsync(id);
             if (job == null)
-            {
                 ErrorMessage = "Job não encontrado.";
-            }
         }
         catch (Exception ex)
         {
@@ -85,17 +77,14 @@ else if (job != null)
         }
     }
 
-    /// <summary>
-    /// Exclui o job do banco de dados.
-    /// </summary>
     private async Task Excluir()
     {
         if (isProcessing || job == null) return;
         try
         {
             isProcessing = true;
-            DbContext.Jobs.Remove(job);
-            await DbContext.SaveChangesAsync();
+            JobRepository.Remove(job);
+            await JobRepository.SaveChangesAsync();
             Navigation.NavigateTo("/jobs");
         }
         catch (Exception ex)
@@ -108,8 +97,5 @@ else if (job != null)
         }
     }
 
-    /// <summary>
-    /// Cancela a exclusão e retorna para a lista de jobs.
-    /// </summary>
     private void Cancelar() => Navigation.NavigateTo("/jobs");
 }

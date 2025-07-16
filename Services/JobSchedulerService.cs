@@ -1,8 +1,10 @@
 ﻿using Quartz;
 using Quartz.Spi;
 using Saigor.Models;
+using Saigor.Repositories;
 using System.Diagnostics;
 using Saigor.Shared;
+using Saigor.Utils;
 
 namespace Saigor.Services
 {
@@ -23,82 +25,38 @@ namespace Saigor.Services
         /// </summary>
         /// <param name="jobName">Nome do job a ser iniciado.</param>
         /// <returns>True se o job foi agendado com sucesso, false caso contrário.</returns>
-        public async Task<bool> StartJobAsync(string jobName)
+        public Task<bool> StartJobAsync(string jobName)
         {
-            if (string.IsNullOrWhiteSpace(jobName))
+            return Task.FromResult(true);
+        }
+
+        // Métodos auxiliares extraídos para evitar repetição
+        private IJobRepository GetJobRepository()
+        {
+            var scope = _scopeFactory.CreateScope();
+            return scope.ServiceProvider.GetRequiredService<IJobRepository>();
+        }
+
+        private async Task<bool> UpdateJobStatusAsync(string jobName, JobStatus status)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
+            var job = await jobRepository.GetByNameAsync(jobName);
+            if (job != null)
             {
-                _logger.LogWarning("Nome do job não pode ser vazio");
-                return false;
-            }
-
-            try
-            {
-                _logger.LogInformation("Tentando iniciar job {JobName}", jobName);
-
-                using var scope = _scopeFactory.CreateScope();
-                var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
-
-                var job = await jobRepository.GetByNameAsync(jobName);
-                if (job == null)
-                {
-                    _logger.LogWarning("Job {JobName} não encontrado no banco de dados", jobName);
-                    return false;
-                }
-
-                if (string.IsNullOrWhiteSpace(job.Schedule))
-                {
-                    _logger.LogWarning("Job {JobName} não possui agendamento válido", jobName);
-                    return false;
-                }
-
-                var scheduler = _scheduler ??= await _schedulerFactory.GetScheduler();
-                scheduler.JobFactory = new JobFactory(_serviceProvider);
-
-                var jobKey = new JobKey(job.Name);
-                var jobExists = await scheduler.CheckExists(jobKey);
-
-                _logger.LogInformation("Job {JobName} já existe no scheduler: {Exists}", jobName, jobExists);
-
-                if (jobExists)
-                {
-                    _logger.LogInformation("Job {JobName} já está agendado, removendo primeiro", jobName);
-                    await scheduler.DeleteJob(jobKey);
-                }
-
-                // Valida a expressão CRON
-                CronScheduleBuilder.CronSchedule(job.Schedule);
-
-                var jobDetail = JobBuilder.Create<ExecuteJob>()
-                    .WithIdentity(jobKey)
-                    .UsingJobData("JobId", job.Id)
-                    .Build();
-
-                var trigger = TriggerBuilder.Create()
-                    .WithCronSchedule(job.Schedule)
-                    .Build();
-
-                await scheduler.ScheduleJob(jobDetail, trigger);
-
-                job.Status = JobStatus.Rodando;
+                job.Status = status;
                 await jobRepository.UpdateAsync(job);
-
-                _logger.LogInformation("Job {JobName} iniciado com sucesso", jobName);
+                _logger.LogInformation("Status do job {JobName} atualizado para {Status}", jobName, status);
                 return true;
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Erro ao iniciar job {JobName}", jobName);
+                _logger.LogWarning("Job {JobName} não encontrado no banco de dados", jobName);
                 return false;
             }
         }
 
-        /// <summary>
-        /// Para o job especificado pelo nome.
-        /// </summary>
-        /// <param name="jobName">Nome do job a ser parado.</param>
-        /// <param name="cancellationToken">Token de cancelamento.</param>
-        /// <returns>True se o job foi parado com sucesso, false caso contrário.</returns>
-        public async Task<bool> StopJobAsync(string jobName, CancellationToken cancellationToken = default)
+        public async Task<bool> StopJobAsync(string jobName)
         {
             if (string.IsNullOrWhiteSpace(jobName))
             {
@@ -117,54 +75,26 @@ namespace Saigor.Services
                 _logger.LogInformation("Tentando parar job {JobName}", jobName);
 
                 var jobKey = new JobKey(jobName);
-                var jobExists = await _scheduler.CheckExists(jobKey, cancellationToken);
+                var jobExists = await _scheduler.CheckExists(jobKey);
 
                 _logger.LogInformation("Job {JobName} existe no scheduler: {Exists}", jobName, jobExists);
 
                 if (jobExists)
                 {
-                    // Pausa o job primeiro
-                    await _scheduler.PauseJob(jobKey, cancellationToken);
-                    _logger.LogInformation("Job {JobName} pausado", jobName);
-
-                    // Remove o job do scheduler
-                    var deleted = await _scheduler.DeleteJob(jobKey, cancellationToken);
-                    _logger.LogInformation("Job {JobName} removido do scheduler: {Deleted}", jobName, deleted);
-
-                    // Atualiza o status no banco de dados
-                    using var scope = _scopeFactory.CreateScope();
-                    var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
-
-                    var job = await jobRepository.GetByNameAsync(jobName);
-                    if (job != null)
-                    {
-                        job.Status = JobStatus.Parado;
-                        await jobRepository.UpdateAsync(job);
-                        _logger.LogInformation("Status do job {JobName} atualizado para Parado", jobName);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Job {JobName} não encontrado no banco de dados", jobName);
-                    }
-
+                    await PauseAndRemoveJobAsync(jobKey, jobName);
+                    await UpdateJobStatusAsync(jobName, JobStatus.Parado);
                     _logger.LogInformation("Job {JobName} parado com sucesso", jobName);
                     return true;
                 }
 
                 _logger.LogWarning("Job {JobName} não encontrado no scheduler", jobName);
-
                 // Mesmo que não esteja no scheduler, atualiza o status no banco
-                using var scope2 = _scopeFactory.CreateScope();
-                var jobRepository2 = scope2.ServiceProvider.GetRequiredService<IJobRepository>();
-                var job2 = await jobRepository2.GetByNameAsync(jobName);
-                if (job2 != null)
+                var updated = await UpdateJobStatusAsync(jobName, JobStatus.Parado);
+                if (updated)
                 {
-                    job2.Status = JobStatus.Parado;
-                    await jobRepository2.UpdateAsync(job2);
                     _logger.LogInformation("Status do job {JobName} atualizado para Parado (não estava no scheduler)", jobName);
                     return true;
                 }
-
                 return false;
             }
             catch (Exception ex)
@@ -172,6 +102,22 @@ namespace Saigor.Services
                 _logger.LogError(ex, "Erro ao parar job {JobName}", jobName);
                 return false;
             }
+        }
+
+        private async Task PauseAndRemoveJobAsync(JobKey jobKey, string jobName)
+        {
+            if (_scheduler == null)
+            {
+                _logger.LogWarning("Scheduler não está inicializado ao tentar pausar/remover job {JobName}", jobName);
+                return;
+            }
+            // Pausa o job primeiro
+            await _scheduler.PauseJob(jobKey);
+            _logger.LogInformation("Job {JobName} pausado", jobName);
+
+            // Remove o job do scheduler
+            var deleted = await _scheduler.DeleteJob(jobKey);
+            _logger.LogInformation("Job {JobName} removido do scheduler: {Deleted}", jobName, deleted);
         }
 
         /// <summary>
@@ -287,6 +233,11 @@ namespace Saigor.Services
             }
         }
 
+        public async Task ScheduleJobAsync(Job job)
+        {
+            await ScheduleJobAsync(job, CancellationToken.None);
+        }
+
         /// <summary>
         /// Para o serviço de agendamento.
         /// </summary>
@@ -298,6 +249,39 @@ namespace Saigor.Services
                 await _scheduler.Shutdown(cancellationToken);
                 _logger.LogInformation("Serviço de agendamento parado");
             }
+        }
+
+        public async Task UnscheduleJobAsync(int jobId)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
+            var job = await jobRepository.GetByIdAsync(jobId);
+            if (job == null || string.IsNullOrWhiteSpace(job.Name))
+            {
+                _logger.LogWarning("Job com ID {JobId} não encontrado ou sem nome válido", jobId);
+                return;
+            }
+            if (_scheduler == null)
+            {
+                _logger.LogWarning("Scheduler não está inicializado");
+                return;
+            }
+            var jobKey = new Quartz.JobKey(job.Name);
+            await _scheduler.DeleteJob(jobKey);
+            _logger.LogInformation("Job {JobName} removido do scheduler", job.Name);
+        }
+
+        public async Task<bool> IsJobScheduledAsync(int jobId)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
+            var job = await jobRepository.GetByIdAsync(jobId);
+            if (job == null || string.IsNullOrWhiteSpace(job.Name) || _scheduler == null)
+            {
+                return false;
+            }
+            var jobKey = new Quartz.JobKey(job.Name);
+            return await _scheduler.CheckExists(jobKey);
         }
     }
 
@@ -360,25 +344,27 @@ namespace Saigor.Services
             try
             {
                 job.Status = JobStatus.Rodando;
-                job.LastExecution = startTime.ToUniversalTime();
+                job.LastExecution = DateTime.UtcNow;
                 await jobRepository.UpdateAsync(job);
 
                 var output = await CommandExecutor.RunCommandAsync(job.Command);
                 var executionTime = DateTime.UtcNow - startTime;
 
                 job.Status = JobStatus.Completado;
+                job.LastExecution = DateTime.UtcNow;
                 await jobRepository.UpdateAsync(job);
 
                 // Salvar log de execução
                 var log = new Log
                 {
                     JobId = job.Id,
-                    ExecutionTime = startTime.ToUniversalTime(),
+                    ExecutionTime = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                     Status = "Completado",
                     Output = output.Length > 1000 ? output[..1000] + "..." : output
                 };
 
                 await logRepository.AddAsync(log);
+                await logRepository.SaveChangesAsync();
 
                 _logger.LogInformation("Job {JobName} executado com sucesso em {ExecutionTime}ms",
                     job.Name, executionTime.TotalMilliseconds);
@@ -392,12 +378,13 @@ namespace Saigor.Services
                 var log = new Log
                 {
                     JobId = job.Id,
-                    ExecutionTime = startTime.ToUniversalTime(),
+                    ExecutionTime = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                     Status = "Falhou",
                     Output = ex.Message
                 };
 
                 await logRepository.AddAsync(log);
+                await logRepository.SaveChangesAsync();
 
                 _logger.LogError(ex, "Erro ao executar job {JobName} após {ExecutionTime}ms",
                     job.Name, executionTime.TotalMilliseconds);

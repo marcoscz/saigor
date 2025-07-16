@@ -1,0 +1,84 @@
+@page "/conexoes"
+@using Saigor.Models
+@inject IConexaoRepository ConexaoRepository
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4">Conexões</MudText>
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateConexao" StartIcon="@Icons.Material.Filled.Add">
+            Nova Conexão
+        </MudButton>
+    </MudPaper>
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Class="ml-3">Carregando conexões...</MudText>
+    }
+    else
+    {
+        <MudTable Items="conexoes" Hover="true" Dense="true" Elevation="1" Class="mb-4">
+            <HeaderContent>
+                <MudTh>Nome</MudTh>
+                <MudTh>Conector</MudTh>
+                <MudTh>Servidor</MudTh>
+                <MudTh>Ambiente</MudTh>
+                <MudTh>Ativo</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                <MudTd DataLabel="Conector">@context.Conector</MudTd>
+                <MudTd DataLabel="Servidor">@context.Servidor</MudTd>
+                <MudTd DataLabel="Ambiente">@context.Ambiente</MudTd>
+                <MudTd DataLabel="Ativo">
+                    <MudChip T="string" Color="@(context.Ativo ? Color.Success : Color.Error)" Size="Size.Small">
+                        @(context.Ativo ? "Sim" : "Não")
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Ações">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditConexao(context.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteConexao(context.Id))" Color="Color.Error" />
+                    </MudButtonGroup>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="m-4" Color="Color.Secondary">Nenhuma conexão encontrada.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<ConexaoModel> conexoes = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConexoesAsync();
+    }
+
+    private async Task LoadConexoesAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var conexoesEnumerable = await ConexaoRepository.GetAllAsync();
+            conexoes = conexoesEnumerable.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar conexões: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void CreateConexao() => Navigation.NavigateTo("/conexoes/create");
+    private void EditConexao(int id) => Navigation.NavigateTo($"/conexoes/edit/{id}");
+    private void DeleteConexao(int id) => Navigation.NavigateTo($"/conexoes/delete/{id}");
+} 

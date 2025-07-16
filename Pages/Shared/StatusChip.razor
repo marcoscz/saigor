@@ -1,0 +1,21 @@
+@using Saigor.Models
+@using MudBlazor
+
+<MudChip T="JobStatus" Color="@GetColor()" Variant="Variant.Filled" Size="Size.Small">
+    @JobStatus
+</MudChip>
+
+@code {
+    [Parameter]
+    public JobStatus JobStatus { get; set; }
+
+    private Color GetColor()
+    {
+        return JobStatus switch
+        {
+            JobStatus.Rodando => Color.Success,
+            JobStatus.Parado => Color.Error,
+            _ => Color.Default
+        };
+    }
+} 
