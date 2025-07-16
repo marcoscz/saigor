@@ -1,8 +1,7 @@
 @page "/tarefas"
 @using MudBlazor
+@inherits Saigor.Pages.Shared.BasePage
 @inject ITarefaRepository TarefaRepository
-@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" Class="mb-4">Gerenciamento de Tarefas</MudText>
@@ -15,14 +14,14 @@
                 </MudButton>
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="RefreshTarefas" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true" Disabled="@isLoading">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="RefreshTarefas" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true" Disabled="@IsLoading">
                     Atualizar
                 </MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
 
-    @if (isLoading)
+    @if (IsLoading)
     {
         <LoadingCard Message="Carregando tarefas..." />
     }
@@ -58,35 +57,25 @@
 
 @code {
     private List<TarefaModel> tarefas = new();
-    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync() => await LoadTarefasAsync();
 
     private async Task LoadTarefasAsync()
     {
-        isLoading = true;
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
             var tarefasEnumerable = await TarefaRepository.GetAllAsync();
             tarefas = tarefasEnumerable.ToList();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Erro ao carregar tarefas: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        }, "Erro ao carregar tarefas");
     }
 
     private async Task RefreshTarefas()
     {
         await LoadTarefasAsync();
-        Snackbar.Add("Tarefas atualizadas com sucesso!", Severity.Success);
+        ShowSuccess("Tarefas atualizadas com sucesso!");
     }
 
-    private void CreateTarefa() => Navigation.NavigateTo("/tarefas/create");
-    private void EditTarefa(int id) => Navigation.NavigateTo($"/tarefas/edit/{id}");
-    private void DeleteTarefa(int id) => Navigation.NavigateTo($"/tarefas/delete/{id}");
+    private void CreateTarefa() => NavigateTo("/tarefas/create");
+    private void EditTarefa(int id) => NavigateTo($"/tarefas/edit/{id}");
+    private void DeleteTarefa(int id) => NavigateTo($"/tarefas/delete/{id}");
 } 

@@ -1,8 +1,7 @@
 @page "/tarefas/delete/{id:int}"
 @using MudBlazor
+@inherits Saigor.Pages.Shared.BasePage
 @inject ITarefaRepository TarefaRepository
-@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-3">
     <MudCard>
@@ -10,7 +9,7 @@
             <MudText Typo="Typo.h5" Color="Color.Error">Excluir Tarefa</MudText>
         </MudCardHeader>
         <MudCardContent>
-            @if (isLoading)
+            @if (IsLoading)
             {
                 <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
                 <MudText Class="ml-3">Carregando...</MudText>
@@ -46,49 +45,32 @@
 @code {
     [Parameter] public int id { get; set; }
     private TarefaModel? tarefa;
-    private bool isLoading = true;
     private bool isProcessing;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        isLoading = true;
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
             tarefa = (await TarefaRepository.GetAllAsync()).FirstOrDefault(t => t.Id == id);
             if (tarefa == null)
                 errorMessage = "Tarefa não encontrada.";
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Erro ao carregar tarefa: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        }, "Erro ao carregar tarefa");
     }
 
     private async Task Excluir()
     {
         if (isProcessing || tarefa == null) return;
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
             isProcessing = true;
             TarefaRepository.Remove(tarefa);
             await TarefaRepository.SaveChangesAsync();
-            Snackbar.Add("Tarefa excluída com sucesso!", Severity.Success);
-            Navigation.NavigateTo("/tarefas");
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Erro ao excluir tarefa: {ex.Message}";
-        }
-        finally
-        {
-            isProcessing = false;
-        }
+            ShowSuccess("Tarefa excluída com sucesso!");
+            NavigateTo("/tarefas");
+        }, "Erro ao excluir tarefa");
+        isProcessing = false;
     }
 
-    private void Cancelar() => Navigation.NavigateTo("/tarefas");
+    private void Cancelar() => NavigateTo("/tarefas");
 } 
