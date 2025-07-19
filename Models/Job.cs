@@ -49,35 +49,19 @@ namespace Saigor.Models
         public JobStatus Status { get; set; } = JobStatus.Rodando;
 
         /// <summary>
+        /// Indica se o job está ativo.
+        /// </summary>
+        public bool IsActive { get; set; } = false;
+
+        /// <summary>
+        /// Ordem de execução do job.
+        /// </summary>
+        [Display(Name = "Ordem")]
+        public int Ordem { get; set; } = 0;
+
+        /// <summary>
         /// Logs de execução deste job.
         /// </summary>
         public virtual ICollection<Log> Logs { get; set; } = [];
-    }
-
-    /// <summary>
-    /// Status possíveis para um job.
-    /// </summary>
-    public enum JobStatus
-    {
-        /// <summary>
-        /// Job está pendente de execução.
-        /// </summary>
-        Pendente,
-        /// <summary>
-        /// Job está em execução.
-        /// </summary>
-        Rodando,
-        /// <summary>
-        /// Job foi completado com sucesso.
-        /// </summary>
-        Completado,
-        /// <summary>
-        /// Job falhou durante a execução.
-        /// </summary>
-        Falhou,
-        /// <summary>
-        /// Job está parado.
-        /// </summary>
-        Parado
     }
 }

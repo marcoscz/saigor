@@ -25,9 +25,61 @@ namespace Saigor.Services
         /// </summary>
         /// <param name="jobName">Nome do job a ser iniciado.</param>
         /// <returns>True se o job foi agendado com sucesso, false caso contrário.</returns>
-        public Task<bool> StartJobAsync(string jobName)
+        public async Task<bool> StartJobAsync(string jobName)
         {
-            return Task.FromResult(true);
+            if (string.IsNullOrWhiteSpace(jobName))
+            {
+                _logger.LogWarning("Nome do job não pode ser vazio");
+                return false;
+            }
+
+            if (_scheduler == null)
+            {
+                _logger.LogWarning("Scheduler não está inicializado");
+                return false;
+            }
+
+            try
+            {
+                _logger.LogInformation("Tentando iniciar job {JobName}", jobName);
+
+                // Busca o job no banco de dados
+                using var scope = _scopeFactory.CreateScope();
+                var jobRepository = scope.ServiceProvider.GetRequiredService<IJobRepository>();
+                var job = await jobRepository.GetByNameAsync(jobName);
+
+                if (job == null)
+                {
+                    _logger.LogWarning("Job {JobName} não encontrado no banco de dados", jobName);
+                    return false;
+                }
+
+                var jobKey = new JobKey(jobName);
+                var jobExists = await _scheduler.CheckExists(jobKey);
+
+                if (jobExists)
+                {
+                    // Se o job já existe, resuma a execução
+                    await _scheduler.ResumeJob(jobKey);
+                    _logger.LogInformation("Job {JobName} resumido", jobName);
+                }
+                else
+                {
+                    // Se o job não existe, agende-o
+                    await ScheduleJobAsync(job);
+                    _logger.LogInformation("Job {JobName} agendado", jobName);
+                }
+
+                // Atualiza o status no banco
+                await UpdateJobStatusAsync(jobName, JobStatus.Rodando);
+                _logger.LogInformation("Job {JobName} iniciado com sucesso", jobName);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao iniciar job {JobName}", jobName);
+                return false;
+            }
         }
 
         // Métodos auxiliares extraídos para evitar repetição

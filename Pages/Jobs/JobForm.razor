@@ -25,6 +25,15 @@
                 <MudSelectItem Value="@JobStatus.Parado">Parado</MudSelectItem>
             </MudSelect>
         </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudNumericField Label="Ordem"
+                             @bind-Value="Job.Ordem"
+                             For="@(() => Job.Ordem)"
+                             Min="0"
+                             Immediate="true"
+                             Disabled="@IsProcessing"
+                             HelperText="Ordem de execução do job (menor número = maior prioridade)" />
+        </MudItem>
         <MudItem xs="12">
             <MudTextField Label="Comando"
                           @bind-Value="Job.Command"

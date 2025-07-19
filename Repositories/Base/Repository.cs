@@ -17,7 +17,7 @@ namespace Saigor.Repositories.Base
         /// <summary>
         /// Busca uma entidade pelo id.
         /// </summary>
-        public async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }
@@ -25,7 +25,7 @@ namespace Saigor.Repositories.Base
         /// <summary>
         /// Retorna todas as entidades do tipo T.
         /// </summary>
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
@@ -71,4 +71,4 @@ namespace Saigor.Repositories.Base
             return await _context.SaveChangesAsync();
         }
     }
-} 
+}

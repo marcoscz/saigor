@@ -3,7 +3,10 @@ using MudBlazor.Services;
 using Quartz;
 using Saigor.Data;
 using Saigor.Repositories;
+using Saigor.Repositories.Base;
 using Saigor.Services;
+using Saigor.Jobs;
+using Saigor.Models;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,16 +55,39 @@ builder.Services.AddQuartzHostedService(options =>
 
 // ------------------- Application Services -------------------
 builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<IRepository<Job>, JobRepository>();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IConexaoRepository, ConexaoRepository>();
+builder.Services.AddScoped<IRepository<ConexaoModel>, ConexaoRepository>();
 builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
+builder.Services.AddScoped<IRepository<TarefaModel>, TarefaRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddTransient<ExecuteJob>();
+builder.Services.AddScoped<IJobTarefaRepository, JobTarefaRepository>();
+builder.Services.AddScoped<IRepository<JobTarefa>, JobTarefaRepository>();
+
+// ------------------- CRUD Services -------------------
+builder.Services.AddScoped(typeof(ICrudService<>), typeof(CrudService<>));
+builder.Services.AddScoped<ICrudService<JobTarefa>, CrudService<JobTarefa>>();
+builder.Services.AddScoped<ICrudService<TarefaModel>, CrudService<TarefaModel>>();
+builder.Services.AddScoped<ICrudService<Job>, CrudService<Job>>();
+builder.Services.AddScoped<ICrudService<ConexaoModel>, CrudService<ConexaoModel>>();
+
+// ------------------- Validation Services -------------------
+builder.Services.AddScoped<IValidationService, ValidationService>();
+
+// ------------------- Cache Services -------------------
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
+
+// ------------------- Other Services -------------------
+builder.Services.AddScoped<ICommandExecutor, CommandExecutorService>();
+builder.Services.AddScoped<HealthCheckService>();
+builder.Services.AddScoped<ExecuteJob>();
 
 // Registrar JobSchedulerService como Singleton para IHostedService e IJobSchedulerService
 builder.Services.AddSingleton<JobSchedulerService>();
 builder.Services.AddHostedService<JobSchedulerService>(provider => provider.GetRequiredService<JobSchedulerService>());
-builder.Services.AddScoped<IJobSchedulerService>(provider => provider.GetRequiredService<JobSchedulerService>());
+builder.Services.AddSingleton<IJobSchedulerService>(provider => provider.GetRequiredService<JobSchedulerService>());
 
 var app = builder.Build();
 

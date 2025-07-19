@@ -35,6 +35,7 @@
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Nome</MudTh>
+                <MudTh>Ordem</MudTh>
                 <MudTh>Comando</MudTh>
                 <MudTh>Agendamento</MudTh>
                 <MudTh>Status</MudTh>
@@ -44,6 +45,9 @@
             <RowTemplate>
                 <MudTd DataLabel="Nome">
                     <MudText Typo="Typo.body1" Class="font-weight-medium">@context.Name</MudText>
+                </MudTd>
+                <MudTd DataLabel="Ordem">
+                    <MudChip T="int" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@context.Ordem</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Comando">
                     <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 200px;">@context.Command</MudText>
@@ -93,7 +97,7 @@
         await ExecuteWithLoadingAsync(async () =>
         {
             var jobsEnumerable = await JobRepository.GetAllAsync();
-            jobs = jobsEnumerable.ToList();
+            jobs = jobsEnumerable.OrderBy(j => j.Ordem).ThenBy(j => j.Name).ToList();
         }, "Erro ao carregar jobs");
     }
 
@@ -142,6 +146,7 @@
     private bool FilterFunc(Job job) =>
         string.IsNullOrWhiteSpace(SearchString) ||
         job.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
+        job.Ordem.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
         job.Command.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
         job.Schedule.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
         job.Status.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);

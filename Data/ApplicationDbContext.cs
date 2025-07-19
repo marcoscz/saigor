@@ -36,6 +36,11 @@ public class ApplicationDbContext : DbContext
     /// Tarefas do sistema.
     /// </summary>
     public DbSet<TarefaModel> Tarefas => Set<TarefaModel>();
+
+    /// <summary>
+    /// Relacionamento entre Jobs e Tarefas.
+    /// </summary>
+    public DbSet<JobTarefa> JobTarefas => Set<JobTarefa>();
     #endregion
 
     /// <summary>
@@ -103,6 +108,31 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Funcao).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Parametros).HasMaxLength(1000);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+        });
+
+        // Configuração da JobTarefa
+        modelBuilder.Entity<JobTarefa>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.JobId);
+            entity.HasIndex(e => e.TarefaId);
+            entity.HasIndex(e => e.ConexoesId);
+            entity.Property(e => e.Ordem).IsRequired();
+
+            entity.HasOne(e => e.Job)
+                .WithMany()
+                .HasForeignKey(e => e.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Tarefa)
+                .WithMany()
+                .HasForeignKey(e => e.TarefaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Conexao)
+                .WithMany()
+                .HasForeignKey(e => e.ConexoesId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

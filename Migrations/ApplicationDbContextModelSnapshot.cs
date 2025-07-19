@@ -71,6 +71,9 @@ namespace Saigor.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("LastExecution")
                         .HasColumnType("TEXT");
 
@@ -78,6 +81,9 @@ namespace Saigor.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Schedule")
                         .IsRequired()
@@ -94,6 +100,35 @@ namespace Saigor.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Jobs");
+                });
+
+            modelBuilder.Entity("Saigor.Models.JobTarefa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConexoesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("JobId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TarefaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConexoesId");
+
+                    b.HasIndex("JobId");
+
+                    b.HasIndex("TarefaId");
+
+                    b.ToTable("JobTarefas");
                 });
 
             modelBuilder.Entity("Saigor.Models.Log", b =>
@@ -165,6 +200,33 @@ namespace Saigor.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Tarefas");
+                });
+
+            modelBuilder.Entity("Saigor.Models.JobTarefa", b =>
+                {
+                    b.HasOne("Saigor.Models.ConexaoModel", "Conexao")
+                        .WithMany()
+                        .HasForeignKey("ConexoesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Saigor.Models.Job", "Job")
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Saigor.Models.TarefaModel", "Tarefa")
+                        .WithMany()
+                        .HasForeignKey("TarefaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conexao");
+
+                    b.Navigation("Job");
+
+                    b.Navigation("Tarefa");
                 });
 
             modelBuilder.Entity("Saigor.Models.Log", b =>
