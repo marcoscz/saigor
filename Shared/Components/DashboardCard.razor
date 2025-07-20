@@ -1,0 +1,52 @@
+@using MudBlazor
+
+<MudPaper Elevation="2" Class="pa-4">
+    <MudStack>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h6" Color="Color.Primary">@Title</MudText>
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <MudIcon Icon="@Icon" Color="@IconColor" Size="Size.Large" />
+            }
+        </MudStack>
+        <MudText Typo="Typo.h3" Class="font-weight-bold" Color="@ValueColor">@Value</MudText>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Subtitle</MudText>
+        }
+        @if (Trend.HasValue)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@(Trend > 0 ? Icons.Material.Filled.TrendingUp : Icons.Material.Filled.TrendingDown)"
+                         Color="@(Trend > 0 ? Color.Success : Color.Error)"
+                         Size="Size.Small" />
+                <MudText Typo="Typo.body2" Color="@(Trend > 0 ? Color.Success : Color.Error)">
+                    @(Trend > 0 ? "+" : "")@Trend.Value.ToString("F1")%
+                </MudText>
+            </MudStack>
+        }
+        @if (!string.IsNullOrEmpty(ActionText) && OnAction.HasDelegate)
+        {
+            <MudButton Variant="Variant.Text"
+                      Color="Color.Primary"
+                      OnClick="OnAction"
+                      Size="Size.Small"
+                      StartIcon="@ActionIcon">
+                @ActionText
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public Color IconColor { get; set; } = Color.Primary;
+    [Parameter] public Color ValueColor { get; set; } = Color.Default;
+    [Parameter] public double? Trend { get; set; }
+    [Parameter] public string? ActionText { get; set; }
+    [Parameter] public string? ActionIcon { get; set; }
+    [Parameter] public EventCallback OnAction { get; set; }
+} 

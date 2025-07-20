@@ -1,0 +1,68 @@
+@using MudBlazor
+@namespace Saigor.Shared.Components
+
+<MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary">
+    @if (ShowEdit)
+    {
+        <IconButton Icon="@Icons.Material.Filled.Edit" 
+                   OnClick="@(() => OnEdit.InvokeAsync(ItemId))" 
+                   Size="Size.Small" 
+                   Tooltip="Editar" />
+    }
+    
+    @if (ShowView)
+    {
+        <IconButton Icon="@Icons.Material.Filled.Visibility" 
+                   OnClick="@(() => OnView.InvokeAsync(ItemId))" 
+                   Size="Size.Small" 
+                   Tooltip="Visualizar" />
+    }
+    
+    @if (ShowStart)
+    {
+        <IconButton Icon="@Icons.Material.Filled.PlayArrow" 
+                   OnClick="@(() => OnStart.InvokeAsync(ItemId))" 
+                   Size="Size.Small" 
+                   Tooltip="Iniciar" />
+    }
+    
+    @if (ShowStop)
+    {
+        <IconButton Icon="@Icons.Material.Filled.Stop" 
+                   OnClick="@(() => OnStop.InvokeAsync(ItemId))" 
+                   Size="Size.Small" 
+                   Tooltip="Parar" />
+    }
+    
+    @if (ShowDelete)
+    {
+        <IconButton Icon="@Icons.Material.Filled.Delete" 
+                   OnClick="@(() => OnDelete.InvokeAsync(ItemId))" 
+                   Size="Size.Small" 
+                   Color="Color.Error" 
+                   Tooltip="Excluir" />
+    }
+    
+    @if (CustomActions != null)
+    {
+        @CustomActions
+    }
+</MudButtonGroup>
+
+@code {
+    [Parameter] public int ItemId { get; set; }
+    
+    [Parameter] public bool ShowEdit { get; set; } = true;
+    [Parameter] public bool ShowView { get; set; } = false;
+    [Parameter] public bool ShowStart { get; set; } = false;
+    [Parameter] public bool ShowStop { get; set; } = false;
+    [Parameter] public bool ShowDelete { get; set; } = true;
+    
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnView { get; set; }
+    [Parameter] public EventCallback<int> OnStart { get; set; }
+    [Parameter] public EventCallback<int> OnStop { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    
+    [Parameter] public RenderFragment? CustomActions { get; set; }
+} 

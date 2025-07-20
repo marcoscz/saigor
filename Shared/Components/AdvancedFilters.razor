@@ -1,0 +1,92 @@
+@using MudBlazor
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <MudGrid>
+        @if (ShowJobFilter)
+        {
+            <MudItem xs="12">
+                <MudSelect T="int?" Label="Job" @bind-Value="SelectedJobId" Clearable="true">
+                    <MudSelectItem Value="@(null as int?)">Todos</MudSelectItem>
+                    @foreach (var job in Jobs)
+                    {
+                        <MudSelectItem Value="@(job.Id)">@job.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        @if (ShowDateRangeFilter)
+        {
+            <MudItem xs="12">
+                <MudDateRangePicker @bind-DateRange="DateRange" Label="Período" />
+            </MudItem>
+        }
+        @if (ShowStatusFilter)
+        {
+            <MudItem xs="12">
+                <MudSelect T="string" Label="Status" @bind-Value="SelectedStatus" Clearable="true">
+                    <MudSelectItem Value="@(null as string)">Todos</MudSelectItem>
+                    @foreach (var status in StatusOptions)
+                    {
+                        <MudSelectItem Value="@status">@status</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        @if (ShowEnvironmentFilter)
+        {
+            <MudItem xs="12">
+                <MudSelect T="string" Label="Ambiente" @bind-Value="SelectedEnvironment" Clearable="true">
+                    <MudSelectItem Value="@(null as string)">Todos</MudSelectItem>
+                    @foreach (var env in EnvironmentOptions)
+                    {
+                        <MudSelectItem Value="@env">@env</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        <MudItem xs="12" md="3">
+            <ActionButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="@OnApplyFilters"
+                           StartIcon="@Icons.Material.Filled.FilterList"
+                           FullWidth="true">
+                Filtrar
+            </ActionButton>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <ActionButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           OnClick="@OnClearFilters"
+                           StartIcon="@Icons.Material.Filled.Clear"
+                           FullWidth="true">
+                Limpar
+            </ActionButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter] public bool ShowJobFilter { get; set; } = false;
+    [Parameter] public bool ShowDateRangeFilter { get; set; } = false;
+    [Parameter] public bool ShowStatusFilter { get; set; } = false;
+    [Parameter] public bool ShowEnvironmentFilter { get; set; } = false;
+
+    [Parameter] public List<JobModel> Jobs { get; set; } = new();
+    [Parameter] public List<string> StatusOptions { get; set; } = new();
+    [Parameter] public List<string> EnvironmentOptions { get; set; } = new();
+
+    [Parameter] public int? SelectedJobId { get; set; }
+    [Parameter] public EventCallback<int?> SelectedJobIdChanged { get; set; }
+
+    [Parameter] public DateRange? DateRange { get; set; }
+    [Parameter] public EventCallback<DateRange?> DateRangeChanged { get; set; }
+
+    [Parameter] public string? SelectedStatus { get; set; }
+    [Parameter] public EventCallback<string?> SelectedStatusChanged { get; set; }
+
+    [Parameter] public string? SelectedEnvironment { get; set; }
+    [Parameter] public EventCallback<string?> SelectedEnvironmentChanged { get; set; }
+
+    [Parameter] public EventCallback OnApplyFilters { get; set; }
+    [Parameter] public EventCallback OnClearFilters { get; set; }
+} 

@@ -1,0 +1,47 @@
+@using MudBlazor
+
+<MudContainer MaxWidth="@MaxWidth">
+    <MudCard Elevation="3" Class="mt-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary">@Title</MudText>
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@Subtitle</MudText>
+            }
+        </MudCardHeader>
+        <MudCardContent>
+            @if (IsLoading)
+            {
+                <LoadingCard Message="@LoadingMessage" />
+            }
+            else if (ShowError)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">
+                    @ErrorMessage
+                </MudAlert>
+                <ActionButton Variant="Variant.Outlined" 
+                             Color="Color.Secondary" 
+                             OnClick="OnBack" 
+                             StartIcon="@Icons.Material.Filled.ArrowBack">
+                    Voltar
+                </ActionButton>
+            }
+            else
+            {
+                @ChildContent
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public string LoadingMessage { get; set; } = "Carregando...";
+    [Parameter] public bool ShowError { get; set; } = false;
+    [Parameter] public string ErrorMessage { get; set; } = "Erro ao carregar dados.";
+    [Parameter] public MaxWidth MaxWidth { get; set; } = MaxWidth.Medium;
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+} 

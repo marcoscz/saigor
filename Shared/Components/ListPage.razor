@@ -1,0 +1,77 @@
+@typeparam T
+@namespace Saigor.Shared.Components
+@using MudBlazor
+@using Saigor.Repositories.Base
+@inherits BasePage
+
+<MudContainer MaxWidth="@MaxWidth">
+    <MudText Typo="Typo.h4" Class="mb-4">@Title</MudText>
+
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <ActionButton Variant="Variant.Filled" 
+                             Color="Color.Primary" 
+                             OnClick="OnCreate" 
+                             StartIcon="@Icons.Material.Filled.Add" 
+                             FullWidth="true">
+                    @CreateButtonText
+                </ActionButton>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <ActionButton Variant="Variant.Outlined" 
+                             Color="Color.Secondary" 
+                             OnClick="OnRefresh" 
+                             StartIcon="@Icons.Material.Filled.Refresh" 
+                             FullWidth="true" 
+                             Disabled="@IsLoading">
+                    Atualizar
+                </ActionButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (IsLoading)
+    {
+        <LoadingCard Message="@LoadingMessage" />
+    }
+    else
+    {
+        <DataTable T="T" Items="Items" 
+                  Loading="@IsLoading" 
+                  Filter="Filter"
+                  ShowToolbar="true"
+                  ShowSearch="@ShowSearch"
+                  SearchPlaceholder="@SearchPlaceholder"
+                  @bind-SearchString="SearchStringParam">
+            <HeaderContent>
+                @HeaderContent
+            </HeaderContent>
+            <RowTemplate Context="context">
+                @if (RowTemplate != null)
+                {
+                    @RowTemplate(context)
+                }
+            </RowTemplate>
+        </DataTable>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string CreateButtonText { get; set; } = "Novo Item";
+    [Parameter] public string LoadingMessage { get; set; } = "Carregando dados...";
+    [Parameter] public string SearchPlaceholder { get; set; } = "Buscar...";
+    [Parameter] public bool ShowSearch { get; set; } = true;
+    [Parameter] public MaxWidth MaxWidth { get; set; } = MaxWidth.ExtraLarge;
+    
+    [Parameter] public IEnumerable<T> Items { get; set; } = new List<T>();
+    [Parameter] public string SearchStringParam { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchStringParamChanged { get; set; }
+    [Parameter] public Func<T, bool>? Filter { get; set; }
+    
+    [Parameter] public EventCallback OnCreate { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<T>? RowTemplate { get; set; }
+} 

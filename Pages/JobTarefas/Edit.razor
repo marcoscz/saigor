@@ -1,0 +1,75 @@
+@page "/jobtarefas/edit/{id:int}"
+@inherits Saigor.Shared.Components.CrudPageBase<JobTarefaModel>
+@using Saigor.Models
+@using Saigor.Shared.Components
+@inject ICrudService<JobModel> JobService
+@inject ICrudService<TarefaModel> TarefaService
+@inject ICrudService<ConexaoModel> ConexaoService
+
+@if (Item != null)
+{
+    <CrudForm Title="Editar Associação Job-Tarefa"
+              SaveButtonText="Salvar"
+              OnSave="OnSave"
+              OnCancel="OnCancel">
+        <FormContent>
+            <MudSelect T="int" Label="Job" @bind-Value="Item.JobId" Required="true">
+                @foreach (var job in jobs.OrderBy(j => j.Ordem).ThenBy(j => j.Name))
+                {
+                    <MudSelectItem Value="@job.Id">@job.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" Label="Tarefa" @bind-Value="Item.TarefaId" Required="true">
+                @foreach (var tarefa in tarefas)
+                {
+                    <MudSelectItem Value="@tarefa.Id">@tarefa.Nome</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" Label="Conexão" @bind-Value="Item.ConexoesId" Required="true">
+                @foreach (var conexao in conexoes)
+                {
+                    <MudSelectItem Value="@conexao.Id">@conexao.Nome</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="Item.Ordem" Label="Ordem" Required="true" />
+        </FormContent>
+    </CrudForm>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private List<JobModel> jobs = new();
+    private List<TarefaModel> tarefas = new();
+    private List<ConexaoModel> conexoes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        // Carregar dados para os selects
+        jobs = await JobService.GetAllAsync();
+        tarefas = (await TarefaService.GetAllAsync()).OrderBy(t => t.Nome).ToList();
+        conexoes = (await ConexaoService.GetAllAsync()).OrderBy(c => c.Nome).ToList();
+        
+        // Carregar o item a ser editado
+        var entity = await CrudService.GetByIdAsync(id);
+        if (entity != null)
+            Item = entity;
+        else
+        {
+            NavigationManager.NavigateTo("/jobtarefas");
+            return;
+        }
+    }
+
+    private async Task OnSave()
+    {
+        var result = await CrudService.UpdateAsync(Item);
+        if (result)
+            NavigationManager.NavigateTo("/jobtarefas");
+        else
+            ShowError("Erro ao atualizar associação Job-Tarefa.");
+    }
+
+    private void OnCancel() => NavigationManager.NavigateTo("/jobtarefas");
+} 

@@ -1,0 +1,182 @@
+@using MudBlazor
+@using Saigor.Utils
+
+<MudPaper Elevation="2" Class="pa-4">
+    <MudStack>
+        <MudText Typo="Typo.h6" Color="Color.Primary">@Title</MudText>
+        
+        <!-- Filtros -->
+        @if (ShowFilters)
+        {
+            <MudGrid Spacing="2">
+                @if (ShowDateRangeFilter)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudDateRangePicker @bind-DateRange="DateRange" Label="Período" />
+                    </MudItem>
+                }
+                @if (ShowStatusFilter)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" Label="Status" @bind-Value="SelectedStatus" Clearable="true">
+                            <MudSelectItem Value="@((string?)null)">Todos</MudSelectItem>
+                            @foreach (var status in StatusOptions)
+                            {
+                                <MudSelectItem Value="@status">@status</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        
+        <!-- Botões de Exportação -->
+        <MudStack Row="true" Spacing="2">
+            @if (ShowCsvExport)
+            {
+                <ActionButton Variant="Variant.Outlined"
+                              Color="Color.Primary"
+                              OnClick="ExportToCsv"
+                              StartIcon="@Icons.Material.Filled.Download"
+                              Disabled="@IsExporting">
+                    Exportar CSV
+                </ActionButton>
+            }
+            @if (ShowJsonExport)
+            {
+                <ActionButton Variant="Variant.Outlined"
+                              Color="Color.Secondary"
+                              OnClick="ExportToJson"
+                              StartIcon="@Icons.Material.Filled.Download"
+                              Disabled="@IsExporting">
+                    Exportar JSON
+                </ActionButton>
+            }
+            @if (ShowHtmlExport)
+            {
+                <ActionButton Variant="Variant.Outlined"
+                              Color="Color.Tertiary"
+                              OnClick="ExportToHtml"
+                              StartIcon="@Icons.Material.Filled.Download"
+                              Disabled="@IsExporting">
+                    Exportar HTML
+                </ActionButton>
+            }
+            @if (ShowGenerateReport)
+            {
+                <ActionButton Variant="Variant.Filled"
+                              Color="Color.Success"
+                              OnClick="GenerateReport"
+                              StartIcon="@Icons.Material.Filled.Assessment"
+                              Disabled="@IsExporting">
+                    Gerar Relatório
+                </ActionButton>
+            }
+        </MudStack>
+        
+        <!-- Estatísticas -->
+        @if (ShowStatistics && Statistics.Any())
+        {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.subtitle1" Class="mb-2">Estatísticas</MudText>
+            <MudGrid Spacing="2">
+                @foreach (var stat in Statistics)
+                {
+                    <MudItem xs="12">
+                        <MudPaper Elevation="1" Class="pa-2">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@stat.Key</MudText>
+                            <MudText Typo="Typo.h6">@stat.Value</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        
+        <!-- Loading -->
+        @if (IsExporting)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Gerando relatório...</MudText>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Gerador de Relatórios";
+    [Parameter] public bool ShowFilters { get; set; } = true;
+    [Parameter] public bool ShowDateRangeFilter { get; set; } = true;
+    [Parameter] public bool ShowStatusFilter { get; set; } = true;
+    [Parameter] public bool ShowCsvExport { get; set; } = true;
+    [Parameter] public bool ShowJsonExport { get; set; } = true;
+    [Parameter] public bool ShowHtmlExport { get; set; } = true;
+    [Parameter] public bool ShowGenerateReport { get; set; } = true;
+    [Parameter] public bool ShowStatistics { get; set; } = true;
+    
+    [Parameter] public List<string> StatusOptions { get; set; } = new();
+    [Parameter] public Dictionary<string, object> Statistics { get; set; } = new();
+    
+    [Parameter] public DateRange? DateRange { get; set; }
+    [Parameter] public EventCallback<DateRange?> DateRangeChanged { get; set; }
+    
+    [Parameter] public string? SelectedStatus { get; set; }
+    [Parameter] public EventCallback<string?> SelectedStatusChanged { get; set; }
+    
+    [Parameter] public EventCallback OnExportCsv { get; set; }
+    [Parameter] public EventCallback OnExportJson { get; set; }
+    [Parameter] public EventCallback OnExportHtml { get; set; }
+    [Parameter] public EventCallback OnGenerateReport { get; set; }
+    
+    private bool IsExporting { get; set; } = false;
+
+    private async Task ExportToCsv()
+    {
+        IsExporting = true;
+        try
+        {
+            await OnExportCsv.InvokeAsync();
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportToJson()
+    {
+        IsExporting = true;
+        try
+        {
+            await OnExportJson.InvokeAsync();
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportToHtml()
+    {
+        IsExporting = true;
+        try
+        {
+            await OnExportHtml.InvokeAsync();
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task GenerateReport()
+    {
+        IsExporting = true;
+        try
+        {
+            await OnGenerateReport.InvokeAsync();
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+} 

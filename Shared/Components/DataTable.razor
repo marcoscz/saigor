@@ -1,0 +1,87 @@
+@typeparam T
+@namespace Saigor.Shared.Components
+@using MudBlazor
+
+<MudTable T="T" Items="@Items"
+          Hover="@Hover"
+          Dense="@Dense"
+          Elevation="@Elevation"
+          Class="@Class"
+          Loading="@Loading"
+          Filter="@Filter"
+          SortLabel="@SortLabel"
+          MultiSelection="@MultiSelection"
+          @bind-SelectedItems="@SelectedItems">
+
+    <ToolBarContent>
+        @if (ShowToolbar)
+        {
+            @if (ShowSearch)
+            {
+                <MudTextField @bind-Value="SearchString"
+                              Placeholder="@SearchPlaceholder"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Class="mt-0" />
+            }
+            @ToolbarContent
+        }
+    </ToolBarContent>
+
+    <HeaderContent>
+        @HeaderContent
+    </HeaderContent>
+
+    <RowTemplate Context="item">
+        @if (RowTemplate != null)
+        {
+            @RowTemplate(item)
+        }
+    </RowTemplate>
+
+    <NoRecordsContent>
+        @if (ShowNoRecords)
+        {
+            <MudText Class="m-4" Color="Color.Secondary">
+                @NoRecordsText
+            </MudText>
+        }
+    </NoRecordsContent>
+
+    <PagerContent>
+        @if (ShowPager)
+        {
+            <MudTablePager />
+        }
+    </PagerContent>
+
+</MudTable>
+
+@code {
+    [Parameter] public IEnumerable<T> Items { get; set; } = new List<T>();
+    [Parameter] public bool Hover { get; set; } = true;
+    [Parameter] public bool Dense { get; set; } = true;
+    [Parameter] public int Elevation { get; set; } = 1;
+    [Parameter] public string Class { get; set; } = "mb-4";
+    [Parameter] public bool Loading { get; set; } = false;
+    [Parameter] public Func<T, bool>? Filter { get; set; }
+    [Parameter] public string SortLabel { get; set; } = "Ordenar por";
+    [Parameter] public bool MultiSelection { get; set; } = false;
+    [Parameter] public HashSet<T> SelectedItems { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<T>> SelectedItemsChanged { get; set; }
+
+    [Parameter] public bool ShowToolbar { get; set; } = false;
+    [Parameter] public bool ShowSearch { get; set; } = false;
+    [Parameter] public string SearchPlaceholder { get; set; } = "Buscar...";
+    [Parameter] public string SearchString { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchStringChanged { get; set; }
+
+    [Parameter] public bool ShowNoRecords { get; set; } = true;
+    [Parameter] public string NoRecordsText { get; set; } = "Nenhum registro encontrado.";
+    [Parameter] public bool ShowPager { get; set; } = true;
+
+    [Parameter] public RenderFragment? ToolbarContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<T>? RowTemplate { get; set; }
+} 

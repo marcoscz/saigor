@@ -1,0 +1,39 @@
+@namespace Saigor.Shared.Components
+@using MudBlazor
+
+<MudButton Variant="@Variant" 
+           Color="@Color" 
+           OnClick="@OnClick" 
+           Disabled="@Disabled"
+           StartIcon="@StartIcon"
+           EndIcon="@EndIcon"
+           Size="@Size"
+           FullWidth="@FullWidth"
+           Class="@Class"
+           ButtonType="@ButtonType">
+    @if (IsLoading)
+    {
+        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" Color="@Color"/>
+        <MudText Class="ms-2">@LoadingText</MudText>
+    }
+    else
+    {
+        @ChildContent
+    }
+</MudButton>
+
+@code {
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public string? StartIcon { get; set; }
+    [Parameter] public string? EndIcon { get; set; }
+    [Parameter] public Size Size { get; set; } = Size.Medium;
+    [Parameter] public bool FullWidth { get; set; } = false;
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public ButtonType ButtonType { get; set; } = ButtonType.Button;
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public string LoadingText { get; set; } = "Carregando...";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+} 

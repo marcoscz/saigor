@@ -1,0 +1,19 @@
+@using MudBlazor
+
+<MudIconButton Icon="@Icon" 
+               OnClick="@OnClick" 
+               Size="@Size" 
+               Color="@Color" 
+               Disabled="@Disabled"
+               Title="@Title"
+               Class="@Class" />
+
+@code {
+    [Parameter] public string Icon { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public Size Size { get; set; } = Size.Small;
+    [Parameter] public Color Color { get; set; } = Color.Default;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Class { get; set; }
+} 

@@ -1,0 +1,41 @@
+@using MudBlazor
+
+<MudPaper Elevation="@Elevation" Class=@($"pa-4 text-center{(string.IsNullOrWhiteSpace(Class) ? "" : " " + Class)}")>
+    <MudIcon Icon="@Icon" Color="@IconColor" Size="@IconSize" />
+    <MudText Typo="Typo.h4" Class="mt-2">@Value</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">@Title</MudText>
+    @if (!string.IsNullOrEmpty(Subtitle))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Subtitle</MudText>
+    }
+    @if (ShowTrend)
+    {
+        <MudText Typo="Typo.caption" Color="@TrendColor" Class="mt-1">
+            @if (TrendValue > 0)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
+            }
+            else if (TrendValue < 0)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" />
+            }
+            @TrendText
+        </MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public string Icon { get; set; } = Icons.Material.Filled.Info;
+    [Parameter] public Color IconColor { get; set; } = Color.Primary;
+    [Parameter] public Size IconSize { get; set; } = Size.Large;
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public int Elevation { get; set; } = 2;
+    [Parameter] public string Class { get; set; } = string.Empty;
+    
+    [Parameter] public bool ShowTrend { get; set; } = false;
+    [Parameter] public double TrendValue { get; set; } = 0;
+    [Parameter] public string TrendText { get; set; } = string.Empty;
+    [Parameter] public Color TrendColor { get; set; } = Color.Success;
+} 

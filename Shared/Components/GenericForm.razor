@@ -1,0 +1,107 @@
+@using MudBlazor
+@using Saigor.Shared
+@using Saigor.Utils
+@namespace Saigor.Shared.Components
+
+<CrudForm Title="@Title"
+          Subtitle="@Subtitle"
+          SaveButtonText="@SaveButtonText"
+          ShowDelete="@ShowDelete"
+          OnSave="@OnSave"
+          OnCancel="@OnCancel"
+          OnDelete="@OnDelete">
+    <FormContent>
+        <MudGrid Spacing="3">
+            @foreach (var field in FormFields)
+            {
+                <MudItem xs="@field.ColumnSize">
+                    @if (field.FieldType == FormFieldType.Text)
+                    {
+                        <FormField Label="@field.Label"
+                                  @bind-Value="@field.Value"
+                                  Required="@field.Required"
+                                  Immediate="true"
+                                  Disabled="@IsProcessing"
+                                  HelperText="@field.HelperText"
+                                  Placeholder="@field.Placeholder" />
+                    }
+                    else if (field.FieldType == FormFieldType.Select)
+                    {
+                        <SelectField Label="@field.Label"
+                                   @bind-Value="@field.Value"
+                                   Options="@field.Options"
+                                   Required="@field.Required"
+                                   Disabled="@IsProcessing"
+                                   HelperText="@field.HelperText" />
+                    }
+                    else if (field.FieldType == FormFieldType.Switch)
+                    {
+                        <MudSwitch T="bool"
+                                  @bind-Checked="@field.BoolValue"
+                                  Color="Color.Primary"
+                                  Disabled="@IsProcessing"
+                                  Label="@field.Label" />
+                    }
+                    else if (field.FieldType == FormFieldType.Enum)
+                    {
+                        <SelectField Label="@field.Label"
+                                   @bind-Value="@field.Value"
+                                   Options="@field.Options"
+                                   Required="@field.Required"
+                                   Disabled="@IsProcessing"
+                                   HelperText="@field.HelperText" />
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+        @if (CustomContent != null)
+        {
+            @CustomContent
+        }
+    </FormContent>
+</CrudForm>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string SaveButtonText { get; set; } = "Salvar";
+    [Parameter] public bool ShowDelete { get; set; } = false;
+    [Parameter] public bool IsProcessing { get; set; } = false;
+
+    [Parameter] public List<FormFieldConfig> FormFields { get; set; } = new();
+    [Parameter] public RenderFragment? CustomContent { get; set; }
+
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+
+    public static List<SelectOption> EnumToSelectOptions<TEnum>() where TEnum : struct, Enum
+    {
+        return Enum.GetValues(typeof(TEnum))
+            .Cast<TEnum>()
+            .Select(e => new SelectOption { Value = e.ToString()!, Text = e.ToString()! })
+            .ToList();
+    }
+
+    public class FormFieldConfig
+    {
+        public string Label { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public bool BoolValue { get; set; }
+        public FormFieldType FieldType { get; set; } = FormFieldType.Text;
+        public bool Required { get; set; } = false;
+        public string HelperText { get; set; } = string.Empty;
+        public string Placeholder { get; set; } = string.Empty;
+        public int ColumnSize { get; set; } = 12;
+        public List<SelectOption> Options { get; set; } = new();
+        public Type? EnumType { get; set; }
+    }
+
+    public enum FormFieldType
+    {
+        Text,
+        Select,
+        Switch,
+        Enum
+    }
+} 

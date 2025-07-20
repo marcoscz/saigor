@@ -1,0 +1,85 @@
+@page "/jobtarefas"
+@inherits Saigor.Shared.Components.CrudPageBase<JobTarefaModel>
+@using Saigor.Models
+@using Saigor.Shared.Components
+@inject ICrudService<JobModel> JobService
+
+<!-- Filtro por Job -->
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudSelect T="int" Label="Filtrar por Job" @bind-Value="SelectedJobId">
+                <MudSelectItem Value="-1">Todos os Jobs</MudSelectItem>
+                @foreach (var job in JobsComTarefas.OrderBy(j => j.Ordem).ThenBy(j => j.Name))
+                {
+                    <MudSelectItem Value="@job.Id">@job.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilter" Class="mt-4">
+                Limpar Filtro
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<ListPage T="JobTarefaModel"
+          Title="Job-Tarefas"
+          CreateButtonText="Nova Associação"
+          Items="FilteredItems"
+          ShowSearch="false"
+          OnCreate="OnCreate"
+          OnRefresh="RefreshDataAsync">
+    
+    <HeaderContent>
+        <th>Job</th>
+        <th>Tarefa</th>
+        <th>Conexão</th>
+        <th>Ordem</th>
+        <th>Ações</th>
+    </HeaderContent>
+    
+    <RowTemplate Context="item">
+        <td>@(item.Job?.Name ?? $"ID: {item.JobId}")</td>
+        <td>@(item.Tarefa?.Nome ?? $"ID: {item.TarefaId}")</td>
+        <td>@(item.Conexao?.Nome ?? item.Conexao?.Conector ?? $"ID: {item.ConexoesId}")</td>
+        <td>@item.Ordem</td>
+        <td>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => Edit(item.Id)">Editar</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => Delete(item.Id)">Excluir</MudButton>
+        </td>
+    </RowTemplate>
+</ListPage>
+
+@code {
+    private List<JobModel> jobs = new();
+    private int SelectedJobId { get; set; } = -1;
+    
+    // Jobs que têm tarefas associadas
+    private List<JobModel> JobsComTarefas => jobs
+        .Where(job => Items.Any(item => item.JobId == job.Id))
+        .ToList();
+    
+    private List<JobTarefaModel> FilteredItems => Items
+        .Where(item => SelectedJobId == -1 || item.JobId == SelectedJobId)
+        .OrderBy(item => item.Job?.Ordem ?? 0)
+        .ThenBy(item => item.Ordem)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        jobs = await JobService.GetAllAsync();
+    }
+
+    private void OnCreate() => NavigationManager.NavigateTo("/jobtarefas/create");
+    private void Edit(int id) => NavigationManager.NavigateTo($"/jobtarefas/edit/{id}");
+    private void Delete(int id) => NavigationManager.NavigateTo($"/jobtarefas/delete/{id}");
+    
+    private void ClearFilter()
+    {
+        SelectedJobId = -1;
+        StateHasChanged();
+    }
+} 

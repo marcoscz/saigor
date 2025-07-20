@@ -1,0 +1,250 @@
+@page "/dashboard"
+@using MudBlazor
+@using Saigor.Shared
+@using Saigor.Shared.Components
+@using Microsoft.Extensions.Caching.Memory
+@inherits BasePage
+@inject ICrudService<JobModel> JobService
+@inject ICrudService<TarefaModel> TarefaService
+@inject ICrudService<ConexaoModel> ConexaoService
+@inject ICrudService<LogModel> LogService
+@inject IMemoryCache Cache
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">Dashboard - Saigor</MudText>
+    <!-- Cards de Estatísticas -->
+    <MudGrid Spacing="3" Class="mb-6">
+        <MudItem xs="12" md="3">
+            <DashboardCard Title="Total de Jobs"
+                          Value="@jobStats.Total.ToString()"
+                          Subtitle="@($"{jobStats.Ativos} ativos")"
+                          Icon="@Icons.Material.Filled.Work"
+                          IconColor="Color.Primary"
+                          ActionText="Ver Jobs"
+                          ActionIcon="@Icons.Material.Filled.List"
+                          OnAction="@NavigateToJobs" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <DashboardCard Title="Tarefas Pendentes"
+                          Value="@tarefaStats.Pendentes.ToString()"
+                          Subtitle="@($"{tarefaStats.Total} total")"
+                          Icon="@Icons.Material.Filled.Schedule"
+                          IconColor="Color.Warning"
+                          ActionText="Ver Tarefas"
+                          ActionIcon="@Icons.Material.Filled.List"
+                          OnAction="@NavigateToTarefas" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <DashboardCard Title="Conexões Ativas"
+                          Value="@conexaoStats.Ativos.ToString()"
+                          Subtitle="@($"{conexaoStats.Total} total")"
+                          Icon="@Icons.Material.Filled.Link"
+                          IconColor="Color.Success"
+                          ActionText="Ver Conexões"
+                          ActionIcon="@Icons.Material.Filled.List"
+                          OnAction="@NavigateToConexoes" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <DashboardCard Title="Logs Hoje"
+                          Value="@logStats.Hoje.ToString()"
+                          Subtitle="@($"{logStats.Total} total")"
+                          Icon="@Icons.Material.Filled.Assessment"
+                          IconColor="Color.Info"
+                          ActionText="Ver Logs"
+                          ActionIcon="@Icons.Material.Filled.List"
+                          OnAction="@NavigateToLogs" />
+        </MudItem>
+    </MudGrid>
+    <!-- Gráficos e Tabelas -->
+    <MudGrid Spacing="3">
+        <!-- Jobs por Status -->
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">Jobs por Status</MudText>
+                <MudList T="KeyValuePair<string, int>" Dense="true">
+                    @foreach (var status in jobStats.PorStatus)
+                    {
+                        <MudListItem T="KeyValuePair<string, int>">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText>@status.Key</MudText>
+                                <MudChip T="string" Color="@GetStatusColor(status.Key)" Size="Size.Small">@status.Value</MudChip>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+        <!-- Últimas Execuções -->
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">Últimas Execuções</MudText>
+                <MudList T="LogModel" Dense="true">
+                    @foreach (var log in ultimasExecucoes)
+                    {
+                        <MudListItem T="LogModel">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body2">@log.Job?.Name</MudText>
+                                <MudText Typo="Typo.caption">@log.ExecutionTime.ToString("g")</MudText>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    <!-- Ações Rápidas -->
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-3">Ações Rápidas</MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <ActionButton Variant="Variant.Filled"
+                             Color="Color.Primary"
+                             OnClick="@NavigateToJobs"
+                             StartIcon="@Icons.Material.Filled.Add"
+                             FullWidth="true">
+                    Novo Job
+                </ActionButton>
+            </MudItem>
+            <MudItem xs="12">
+                <ActionButton Variant="Variant.Filled"
+                             Color="Color.Secondary"
+                             OnClick="@NavigateToTarefas"
+                             StartIcon="@Icons.Material.Filled.Add"
+                             FullWidth="true">
+                    Nova Tarefa
+                </ActionButton>
+            </MudItem>
+            <MudItem xs="12">
+                <ActionButton Variant="Variant.Filled"
+                             Color="Color.Tertiary"
+                             OnClick="@NavigateToConexoes"
+                             StartIcon="@Icons.Material.Filled.Add"
+                             FullWidth="true">
+                    Nova Conexão
+                </ActionButton>
+            </MudItem>
+            <MudItem xs="12">
+                <ActionButton Variant="Variant.Outlined"
+                             Color="Color.Info"
+                             OnClick="@RefreshDashboard"
+                             StartIcon="@Icons.Material.Filled.Refresh"
+                             FullWidth="true">
+                    Atualizar
+                </ActionButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private JobStats jobStats = new();
+    private TarefaStats tarefaStats = new();
+    private ConexaoStats conexaoStats = new();
+    private LogStats logStats = new();
+    private List<LogModel> ultimasExecucoes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        await ExecuteWithLoadingAsync(async () =>
+        {
+            // Usar cache para melhorar performance
+            var cacheKey = "dashboard_stats";
+            var stats = await CacheHelper.GetOrCreateAsync(Cache, cacheKey, async () =>
+            {
+                var jobs = await JobService.GetAllAsync();
+                var tarefas = await TarefaService.GetAllAsync();
+                var conexoes = await ConexaoService.GetAllAsync();
+                var logs = await LogService.GetAllAsync();
+                return new
+                {
+                    Jobs = jobs,
+                    Tarefas = tarefas,
+                    Conexoes = conexoes,
+                    Logs = logs
+                };
+            }, expirationMinutes: 5);
+
+            // Processar estatísticas
+            jobStats = new JobStats
+            {
+                Total = stats.Jobs.Count,
+                Ativos = stats.Jobs.Count(j => j.IsActive),
+                PorStatus = stats.Jobs.GroupBy(j => j.Status)
+                                     .ToDictionary(g => g.Key.ToString(), g => g.Count())
+            };
+
+            tarefaStats = new TarefaStats
+            {
+                Total = stats.Tarefas.Count,
+                Pendentes = stats.Tarefas.Count(t => t.Status == "Pendente"),
+                Concluidas = stats.Tarefas.Count(t => t.Status == "Concluída")
+            };
+
+            conexaoStats = new ConexaoStats
+            {
+                Total = stats.Conexoes.Count,
+                Ativos = stats.Conexoes.Count(c => c.Ativo)
+            };
+
+            logStats = new LogStats
+            {
+                Total = stats.Logs.Count,
+                Hoje = stats.Logs.Count(l => l.ExecutionTime.Date == DateTime.Today)
+            };
+
+            ultimasExecucoes = stats.Logs.OrderByDescending(l => l.ExecutionTime)
+                                        .Take(5)
+                                        .ToList();
+        }, "Erro ao carregar dados do dashboard");
+    }
+
+    private async Task RefreshDashboard()
+    {
+        // Limpar cache para forçar recarregamento
+        CacheHelper.Remove(Cache, "dashboard_stats");
+        await LoadDashboardDataAsync();
+        ShowSuccess("Dashboard atualizado!");
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Pendente" => Color.Warning,
+        "Rodando" => Color.Info,
+        "Completado" => Color.Success,
+        "Falhou" => Color.Error,
+        _ => Color.Default
+    };
+
+    private void NavigateToJobs() => NavigateTo("/jobs");
+    private void NavigateToTarefas() => NavigateTo("/tarefas");
+    private void NavigateToConexoes() => NavigateTo("/conexoes");
+    private void NavigateToLogs() => NavigateTo("/logs");
+
+    public class JobStats
+    {
+        public int Total { get; set; }
+        public int Ativos { get; set; }
+        public Dictionary<string, int> PorStatus { get; set; } = new();
+    }
+    public class TarefaStats
+    {
+        public int Total { get; set; }
+        public int Pendentes { get; set; }
+        public int Concluidas { get; set; }
+    }
+    public class ConexaoStats
+    {
+        public int Total { get; set; }
+        public int Ativos { get; set; }
+    }
+    public class LogStats
+    {
+        public int Total { get; set; }
+        public int Hoje { get; set; }
+    }
+} 

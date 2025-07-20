@@ -1,0 +1,51 @@
+@page "/jobtarefas/delete/{id:int}"
+@inherits Saigor.Shared.Components.CrudPageBase<JobTarefaModel>
+@using Saigor.Models
+
+@if (Item != null)
+{
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h6">Deseja realmente excluir esta associação Job-Tarefa?</MudText>
+        
+        <MudCard Class="mt-4">
+            <MudCardContent>
+                <MudText><strong>Job:</strong> @(Item.Job?.Name ?? $"ID: {Item.JobId}") (Ordem: @(Item.Job?.Ordem ?? 0))</MudText>
+                <MudText><strong>Tarefa:</strong> @(Item.Tarefa?.Nome ?? $"ID: {Item.TarefaId}")</MudText>
+                <MudText><strong>Conexão:</strong> @(Item.Conexao?.Nome ?? Item.Conexao?.Conector ?? $"ID: {Item.ConexoesId}")</MudText>
+                <MudText><strong>Ordem:</strong> @Item.Ordem</MudText>
+            </MudCardContent>
+        </MudCard>
+        
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Color="Color.Error" OnClick="OnDelete">Excluir</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="OnCancel">Cancelar</MudButton>
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var entity = await CrudService.GetByIdAsync(id);
+        if (entity != null)
+            Item = entity;
+        else
+        {
+            NavigationManager.NavigateTo("/jobtarefas");
+            return;
+        }
+    }
+
+    private async Task OnDelete()
+    {
+        var result = await CrudService.DeleteAsync(Item);
+        if (result)
+            NavigationManager.NavigateTo("/jobtarefas");
+        else
+            ShowError("Erro ao excluir associação Job-Tarefa.");
+    }
+
+    private void OnCancel() => NavigationManager.NavigateTo("/jobtarefas");
+} 

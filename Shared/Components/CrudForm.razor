@@ -1,0 +1,64 @@
+@namespace Saigor.Shared.Components
+@using MudBlazor
+@inherits BasePage
+
+<FormPage Title="@Title"
+          Subtitle="@Subtitle"
+          IsLoading="@IsLoading"
+          LoadingMessage="@LoadingMessage"
+          ShowError="@ShowErrorParam"
+          ErrorMessage="@ErrorMessage"
+          OnBack="OnBack">
+    
+    <MudForm @ref="form" @bind-IsValid="@IsValid">
+        @FormContent
+    </MudForm>
+    
+    <MudDivider Class="my-4" />
+    
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+        <ActionButton Variant="Variant.Outlined" 
+                     Color="Color.Secondary" 
+                     OnClick="OnCancel" 
+                     StartIcon="@Icons.Material.Filled.Cancel">
+            Cancelar
+        </ActionButton>
+        
+        @if (ShowDelete)
+        {
+            <ActionButton Variant="Variant.Outlined" 
+                         Color="Color.Error" 
+                         OnClick="OnDelete" 
+                         StartIcon="@Icons.Material.Filled.Delete">
+                Excluir
+            </ActionButton>
+        }
+        
+        <ActionButton Variant="Variant.Filled" 
+                     Color="Color.Primary" 
+                     OnClick="OnSave" 
+                     StartIcon="@Icons.Material.Filled.Save"
+                     Disabled="@(!IsValid || IsLoading)">
+            @SaveButtonText
+        </ActionButton>
+    </MudStack>
+</FormPage>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string LoadingMessage { get; set; } = "Salvando...";
+    [Parameter] public string SaveButtonText { get; set; } = "Salvar";
+    [Parameter] public bool ShowErrorParam { get; set; } = false;
+    [Parameter] public string ErrorMessage { get; set; } = "Erro ao carregar dados.";
+    [Parameter] public bool ShowDelete { get; set; } = false;
+    
+    [Parameter] public RenderFragment? FormContent { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+    
+    private MudForm form = default!;
+    private bool IsValid { get; set; } = true;
+} 
