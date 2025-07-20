@@ -1,4 +1,3 @@
-using FluentValidation;
 using FluentValidation.Results;
 using Saigor.Domain.Validators;
 using Saigor.Models;
@@ -116,4 +115,4 @@ public class ValidationService : IValidationService
 
         return Uri.TryCreate(url, UriKind.Absolute, out _);
     }
-} 
+}
