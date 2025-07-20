@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Saigor.Repositories
 {
-    public class LogRepository : Repository<Log>, ILogRepository
+    public class LogRepository : Repository<LogModel>, ILogRepository
     {
         public LogRepository(ApplicationDbContext context) : base(context)
         {
@@ -28,7 +28,7 @@ namespace Saigor.Repositories
         /// <summary>
         /// Busca logs em um intervalo de datas.
         /// </summary>
-        public async Task<IEnumerable<Log>> GetByDateRangeAsync(DateTime start, DateTime end)
+        public async Task<IEnumerable<LogModel>> GetByDateRangeAsync(DateTime start, DateTime end)
         {
             return await _dbSet
                 .Where(l => l.ExecutionTime >= start && l.ExecutionTime <= end)
@@ -38,7 +38,7 @@ namespace Saigor.Repositories
         /// <summary>
         /// Busca logs por status.
         /// </summary>
-        public async Task<IEnumerable<Log>> GetByStatusAsync(string status)
+        public async Task<IEnumerable<LogModel>> GetByStatusAsync(string status)
         {
             return await _dbSet
                 .Where(l => l.Status == status)

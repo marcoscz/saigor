@@ -98,7 +98,7 @@
 </EditForm>
 
 @code {
-    [Parameter] public Job Job { get; set; } = new();
+    [Parameter] public JobModel Job { get; set; } = new();
     [Parameter] public bool IsProcessing { get; set; }
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }

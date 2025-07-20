@@ -49,7 +49,7 @@ namespace Saigor.Services
         /// <summary>
         /// Retorna os 5 jobs mais recentes.
         /// </summary>
-        public async Task<IEnumerable<Job>> GetRecentJobsAsync()
+        public async Task<IEnumerable<JobModel>> GetRecentJobsAsync()
         {
             return await _context.Jobs
                 .OrderByDescending(j => j.Id)
@@ -60,7 +60,7 @@ namespace Saigor.Services
         /// <summary>
         /// Retorna os 5 logs mais recentes.
         /// </summary>
-        public async Task<IEnumerable<Log>> GetRecentLogsAsync()
+        public async Task<IEnumerable<LogModel>> GetRecentLogsAsync()
         {
             return await _context.Logs
                 .OrderByDescending(l => l.Id)

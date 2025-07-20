@@ -55,7 +55,7 @@ builder.Services.AddQuartzHostedService(options =>
 
 // ------------------- Application Services -------------------
 builder.Services.AddScoped<IJobRepository, JobRepository>();
-builder.Services.AddScoped<IRepository<Job>, JobRepository>();
+builder.Services.AddScoped<IRepository<JobModel>, JobRepository>();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IConexaoRepository, ConexaoRepository>();
 builder.Services.AddScoped<IRepository<ConexaoModel>, ConexaoRepository>();
@@ -63,13 +63,13 @@ builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
 builder.Services.AddScoped<IRepository<TarefaModel>, TarefaRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IJobTarefaRepository, JobTarefaRepository>();
-builder.Services.AddScoped<IRepository<JobTarefa>, JobTarefaRepository>();
+builder.Services.AddScoped<IRepository<JobTarefaModel>, JobTarefaRepository>();
 
 // ------------------- CRUD Services -------------------
 builder.Services.AddScoped(typeof(ICrudService<>), typeof(CrudService<>));
-builder.Services.AddScoped<ICrudService<JobTarefa>, CrudService<JobTarefa>>();
+builder.Services.AddScoped<ICrudService<JobTarefaModel>, CrudService<JobTarefaModel>>();
 builder.Services.AddScoped<ICrudService<TarefaModel>, CrudService<TarefaModel>>();
-builder.Services.AddScoped<ICrudService<Job>, CrudService<Job>>();
+builder.Services.AddScoped<ICrudService<JobModel>, CrudService<JobModel>>();
 builder.Services.AddScoped<ICrudService<ConexaoModel>, CrudService<ConexaoModel>>();
 
 // ------------------- Validation Services -------------------

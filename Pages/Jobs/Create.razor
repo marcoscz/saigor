@@ -16,7 +16,7 @@
 </MudContainer>
 
 @code {
-    private Job job = new();
+    private JobModel job = new();
     private bool isProcessing;
 
     protected override void OnInitialized() => job.Status = JobStatus.Pendente;

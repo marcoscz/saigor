@@ -61,7 +61,7 @@
                   Elevation="1" 
                   Class="mb-4"
                   Loading="@isLoading"
-                  Filter="new Func<Log,bool>(FilterFunc)"
+                  Filter="new Func<LogModel,bool>(FilterFunc)"
                   SortLabel="Ordenar por">
             <ToolBarContent>
                 <MudTextField @bind-Value="searchString" 
@@ -122,9 +122,9 @@
 </MudContainer>
 
 @code {
-    private List<Log> logs = new();
-    private List<Log> filteredLogs = new();
-    private List<Job> jobs = new();
+    private List<LogModel> logs = new();
+    private List<LogModel> filteredLogs = new();
+    private List<JobModel> jobs = new();
     private bool isLoading = true;
     private string searchString = string.Empty;
     private int? selectedJobId;
@@ -214,7 +214,7 @@
         Snackbar.Add("Filtros limpos", Severity.Info);
     }
 
-    private bool FilterFunc(Log log)
+    private bool FilterFunc(LogModel log)
     {
         if (string.IsNullOrWhiteSpace(searchString))
             return true;

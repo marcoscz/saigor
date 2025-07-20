@@ -230,8 +230,8 @@
 
 @code {
     private DashboardStatistics statistics = new();
-    private IEnumerable<Job> recentJobs = new List<Job>();
-    private IEnumerable<Log> recentLogs = new List<Log>();
+    private IEnumerable<JobModel> recentJobs = new List<JobModel>();
+    private IEnumerable<LogModel> recentLogs = new List<LogModel>();
     private Dictionary<JobStatus, int> jobsByStatus = new();
     private Dictionary<string, int> logsByStatus = new();
     private bool isLoading = true;
@@ -287,7 +287,7 @@
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao carregar jobs recentes");
-            recentJobs = new List<Job>();
+            recentJobs = new List<JobModel>();
         }
     }
 
@@ -300,7 +300,7 @@
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao carregar logs recentes");
-            recentLogs = new List<Log>();
+            recentLogs = new List<LogModel>();
         }
     }
 

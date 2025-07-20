@@ -29,7 +29,7 @@
 
 @code {
     [Parameter] public int id { get; set; }
-    private Job job = new();
+    private JobModel job = new();
     private bool isProcessing;
 
     protected override async Task OnInitializedAsync()

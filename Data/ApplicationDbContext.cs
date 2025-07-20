@@ -20,12 +20,12 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Jobs/Tarefas agendadas.
     /// </summary>
-    public DbSet<Job> Jobs => Set<Job>();
+    public DbSet<JobModel> Jobs => Set<JobModel>();
 
     /// <summary>
     /// Logs de execução.
     /// </summary>
-    public DbSet<Log> Logs => Set<Log>();
+    public DbSet<LogModel> Logs => Set<LogModel>();
 
     /// <summary>
     /// Conexões de banco de dados.
@@ -40,7 +40,7 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Relacionamento entre Jobs e Tarefas.
     /// </summary>
-    public DbSet<JobTarefa> JobTarefas => Set<JobTarefa>();
+    public DbSet<JobTarefaModel> JobTarefas => Set<JobTarefaModel>();
     #endregion
 
     /// <summary>
@@ -54,7 +54,7 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Configuração do Job
-        modelBuilder.Entity<Job>(entity =>
+        modelBuilder.Entity<JobModel>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Name);
@@ -66,7 +66,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // Configuração do Log
-        modelBuilder.Entity<Log>(entity =>
+        modelBuilder.Entity<LogModel>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.ExecutionTime);
@@ -111,7 +111,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // Configuração da JobTarefa
-        modelBuilder.Entity<JobTarefa>(entity =>
+        modelBuilder.Entity<JobTarefaModel>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.JobId);

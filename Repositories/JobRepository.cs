@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Saigor.Repositories
 {
-    public class JobRepository : Repository<Job>, IJobRepository
+    public class JobRepository : Repository<JobModel>, IJobRepository
     {
         public JobRepository(ApplicationDbContext context) : base(context)
         {
@@ -15,7 +15,7 @@ namespace Saigor.Repositories
         /// <summary>
         /// Atualiza um job existente no banco de dados.
         /// </summary>
-        public async Task UpdateAsync(Job job)
+        public async Task UpdateAsync(JobModel job)
         {
             _context.Entry(job).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -24,7 +24,7 @@ namespace Saigor.Repositories
         /// <summary>
         /// Busca um job pelo nome.
         /// </summary>
-        public async Task<Job?> GetByNameAsync(string name)
+        public async Task<JobModel?> GetByNameAsync(string name)
         {
             return await _dbSet.FirstOrDefaultAsync(j => j.Name == name);
         }

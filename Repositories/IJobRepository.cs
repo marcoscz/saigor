@@ -3,16 +3,16 @@ using Saigor.Repositories.Base;
 
 namespace Saigor.Repositories
 {
-    public interface IJobRepository : IRepository<Job>
+    public interface IJobRepository : IRepository<JobModel>
     {
         /// <summary>
         /// Atualiza um job existente no banco de dados.
         /// </summary>
-        Task UpdateAsync(Job job);
+        Task UpdateAsync(JobModel job);
         /// <summary>
         /// Busca um job pelo nome.
         /// </summary>
-        Task<Job?> GetByNameAsync(string name);
+        Task<JobModel?> GetByNameAsync(string name);
         /// <summary>
         /// Verifica se existe um job com o nome informado.
         /// </summary>

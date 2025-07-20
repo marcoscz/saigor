@@ -230,7 +230,7 @@ namespace Saigor.Services
         /// <summary>
         /// Agenda um job individual.
         /// </summary>
-        private async Task ScheduleJobAsync(Job job, CancellationToken cancellationToken)
+        private async Task ScheduleJobAsync(JobModel job, CancellationToken cancellationToken)
         {
             try
             {
@@ -285,7 +285,7 @@ namespace Saigor.Services
             }
         }
 
-        public async Task ScheduleJobAsync(Job job)
+        public async Task ScheduleJobAsync(JobModel job)
         {
             await ScheduleJobAsync(job, CancellationToken.None);
         }
@@ -407,7 +407,7 @@ namespace Saigor.Services
                 await jobRepository.UpdateAsync(job);
 
                 // Salvar log de execução
-                var log = new Log
+                var log = new LogModel
                 {
                     JobId = job.Id,
                     ExecutionTime = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -427,7 +427,7 @@ namespace Saigor.Services
                 job.Status = JobStatus.Falhou;
                 await jobRepository.UpdateAsync(job);
 
-                var log = new Log
+                var log = new LogModel
                 {
                     JobId = job.Id,
                     ExecutionTime = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),

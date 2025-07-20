@@ -3,7 +3,7 @@ using Saigor.Repositories.Base;
 
 namespace Saigor.Repositories
 {
-    public interface ILogRepository : IRepository<Log>
+    public interface ILogRepository : IRepository<LogModel>
     {
         /// <summary>
         /// Remove um log pelo id.
@@ -12,10 +12,10 @@ namespace Saigor.Repositories
         /// <summary>
         /// Busca logs em um intervalo de datas.
         /// </summary>
-        Task<IEnumerable<Log>> GetByDateRangeAsync(DateTime start, DateTime end);
+        Task<IEnumerable<LogModel>> GetByDateRangeAsync(DateTime start, DateTime end);
         /// <summary>
         /// Busca logs por status.
         /// </summary>
-        Task<IEnumerable<Log>> GetByStatusAsync(string status);
+        Task<IEnumerable<LogModel>> GetByStatusAsync(string status);
     }
 } 

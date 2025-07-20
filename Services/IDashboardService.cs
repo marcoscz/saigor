@@ -18,8 +18,8 @@ namespace Saigor.Services
         /// </summary>
         Task<Dictionary<JobStatus, int>> GetJobsCountByStatusAsync();
         Task<DashboardStatistics> GetStatisticsAsync();
-        Task<IEnumerable<Job>> GetRecentJobsAsync();
-        Task<IEnumerable<Log>> GetRecentLogsAsync();
+        Task<IEnumerable<JobModel>> GetRecentJobsAsync();
+        Task<IEnumerable<LogModel>> GetRecentLogsAsync();
         Task<Dictionary<string, int>> GetLogsByStatusAsync();
     }
 } 
