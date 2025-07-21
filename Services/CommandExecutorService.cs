@@ -13,7 +13,8 @@ public class CommandExecutorService : ICommandExecutor
 
     public CommandExecutorService(ILogger<CommandExecutorService> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     /// <summary>

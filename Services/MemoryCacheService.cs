@@ -14,13 +14,12 @@ public class MemoryCacheService : ICacheService
     private readonly ILogger<MemoryCacheService> _logger;
     private readonly MemoryCacheEntryOptions _defaultOptions;
 
-    public MemoryCacheService(
-        IMemoryCache cache,
-        ILogger<MemoryCacheService> logger,
-        IOptions<AppSettings> appSettings)
+    public MemoryCacheService(IMemoryCache cache, ILogger<MemoryCacheService> logger)
     {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(logger);
+        _cache = cache;
+        _logger = logger;
         
         // Configuração padrão do cache
         _defaultOptions = new MemoryCacheEntryOptions

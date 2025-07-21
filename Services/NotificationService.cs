@@ -18,9 +18,12 @@ public class NotificationService : INotificationService
         ICacheService cacheService,
         IOptions<AppSettings> appSettings)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(appSettings);
+        _logger = logger;
+        _cacheService = cacheService;
+        _appSettings = appSettings.Value;
         _notifications = new List<Notification>();
     }
 
@@ -29,8 +32,7 @@ public class NotificationService : INotificationService
     /// </summary>
     public Task AddNotificationAsync(Notification notification)
     {
-        if (notification == null)
-            throw new ArgumentNullException(nameof(notification));
+        ArgumentNullException.ThrowIfNull(notification);
 
         try
         {

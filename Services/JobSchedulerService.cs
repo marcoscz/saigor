@@ -8,17 +8,29 @@ using Saigor.Utils;
 
 namespace Saigor.Services
 {
-    public class JobSchedulerService(
-        ISchedulerFactory schedulerFactory,
-        IServiceProvider serviceProvider,
-        IServiceScopeFactory scopeFactory,
-        ILogger<JobSchedulerService> logger) : IJobSchedulerService, IHostedService
+    public class JobSchedulerService : IJobSchedulerService, IHostedService
     {
-        private readonly ISchedulerFactory _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
-        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-        private readonly ILogger<JobSchedulerService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<JobSchedulerService> _logger;
         private IScheduler? _scheduler;
+
+        public JobSchedulerService(
+            ISchedulerFactory schedulerFactory,
+            IServiceProvider serviceProvider,
+            IServiceScopeFactory scopeFactory,
+            ILogger<JobSchedulerService> logger)
+        {
+            ArgumentNullException.ThrowIfNull(schedulerFactory);
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(scopeFactory);
+            ArgumentNullException.ThrowIfNull(logger);
+            _schedulerFactory = schedulerFactory;
+            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
+            _logger = logger;
+        }
 
         /// <summary>
         /// Inicia o job especificado pelo nome.
@@ -325,9 +337,14 @@ namespace Saigor.Services
         }
     }
 
-    public class JobFactory(IServiceProvider serviceProvider) : IJobFactory
+    public class JobFactory : IJobFactory
     {
-        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private readonly IServiceProvider _serviceProvider;
+        public JobFactory(IServiceProvider serviceProvider)
+        {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+            _serviceProvider = serviceProvider;
+        }
 
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
@@ -357,10 +374,17 @@ namespace Saigor.Services
     }
 
     [DisallowConcurrentExecution]
-    public class ExecuteJob(IServiceScopeFactory scopeFactory, ILogger<ExecuteJob> logger) : IJob
+    public class ExecuteJob : IJob
     {
-        private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-        private readonly ILogger<ExecuteJob> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<ExecuteJob> _logger;
+        public ExecuteJob(IServiceScopeFactory scopeFactory, ILogger<ExecuteJob> logger)
+        {
+            ArgumentNullException.ThrowIfNull(scopeFactory);
+            ArgumentNullException.ThrowIfNull(logger);
+            _scopeFactory = scopeFactory;
+            _logger = logger;
+        }
 
         public async Task Execute(IJobExecutionContext context)
         {

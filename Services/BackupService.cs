@@ -21,9 +21,12 @@ public class BackupService : IBackupService
         ILogger<BackupService> logger,
         IOptions<AppSettings> appSettings)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(appSettings);
+        _context = context;
+        _logger = logger;
+        _appSettings = appSettings.Value;
         
         _backupDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backups");
         Directory.CreateDirectory(_backupDirectory);

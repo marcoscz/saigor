@@ -11,7 +11,8 @@ namespace Saigor.Services.Base
 
         protected BaseService(ILogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            _logger = logger;
         }
 
         /// <summary>

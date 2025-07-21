@@ -16,8 +16,10 @@ namespace Saigor.Repositories.Base
 
         protected BaseRepository(DbContext context, ILogger logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(logger);
+            _context = context;
+            _logger = logger;
             _dbSet = _context.Set<T>();
         }
 

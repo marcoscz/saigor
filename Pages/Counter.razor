@@ -1,0 +1,22 @@
+@page "/counter"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-6">
+    <MudPaper Elevation="2" Class="pa-6 text-center">
+        <MudText Typo="Typo.h4" Color="Color.Primary">Contador</MudText>
+        <MudText Typo="Typo.body1" Class="mt-2 mb-4">Clique no botão para incrementar o valor.</MudText>
+        <MudText Typo="Typo.h2" Color="Color.Secondary">@currentCount</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IncrementCount" Class="mt-4">
+            Incrementar
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+} 

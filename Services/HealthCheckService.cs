@@ -19,9 +19,12 @@ public class HealthCheckService : IHealthCheckService
         ICacheService cacheService,
         ILogger<HealthCheckService> logger)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(logger);
+        _context = context;
+        _cacheService = cacheService;
+        _logger = logger;
     }
 
     /// <summary>

@@ -26,9 +26,7 @@ public class ValidationService : IValidationService
     /// </summary>
     public ValidationResult ValidateJob(JobModel job)
     {
-        if (job == null)
-            throw new ArgumentNullException(nameof(job));
-
+        ArgumentNullException.ThrowIfNull(job);
         return _jobValidator.Validate(job);
     }
 
@@ -37,9 +35,7 @@ public class ValidationService : IValidationService
     /// </summary>
     public ValidationResult ValidateConexao(ConexaoModel conexao)
     {
-        if (conexao == null)
-            throw new ArgumentNullException(nameof(conexao));
-
+        ArgumentNullException.ThrowIfNull(conexao);
         return _conexaoValidator.Validate(conexao);
     }
 
@@ -48,9 +44,7 @@ public class ValidationService : IValidationService
     /// </summary>
     public ValidationResult ValidateTarefa(TarefaModel tarefa)
     {
-        if (tarefa == null)
-            throw new ArgumentNullException(nameof(tarefa));
-
+        ArgumentNullException.ThrowIfNull(tarefa);
         return _tarefaValidator.Validate(tarefa);
     }
 
