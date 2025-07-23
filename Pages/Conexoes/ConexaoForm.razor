@@ -22,7 +22,10 @@
             <MudTextField Label="Descrição" @bind-Value="Conexao.Descricao" Disabled="@IsProcessing" />
         </MudItem>
         <MudItem xs="12" sm="6">
-            <MudSwitch T="bool" @bind-Checked="Conexao.Ativo" Color="Color.Primary" Disabled="@IsProcessing" Label="Ativo" />
+            <MudSelect T="bool" Label="Ativo" @bind-Value="Conexao.Ativo" Disabled="@IsProcessing" Required="true" RequiredError="Selecione se está ativo ou não">
+                <MudSelectItem Value="true">Sim</MudSelectItem>
+                <MudSelectItem Value="false">Não</MudSelectItem>
+            </MudSelect>
         </MudItem>
     </MudGrid>
     <MudCardActions Class="mt-4">

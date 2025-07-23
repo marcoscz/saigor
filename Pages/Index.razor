@@ -182,49 +182,6 @@
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Nenhuma execução encontrada</MudText>
             }
         </MudPaper>
-
-        <!-- Ações Rápidas -->
-        <MudPaper Elevation="2" Class="pa-4">
-            <MudText Typo="Typo.h6" Class="mb-3">Ações Rápidas</MudText>
-            <MudGrid>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudButton Variant="Variant.Filled" 
-                              Color="Color.Primary" 
-                              OnClick="CreateJob" 
-                              StartIcon="@Icons.Material.Filled.Add" 
-                              FullWidth="true">
-                        Novo Job
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudButton Variant="Variant.Outlined" 
-                              Color="Color.Secondary" 
-                              OnClick="ViewJobs" 
-                              StartIcon="@Icons.Material.Filled.Work" 
-                              FullWidth="true">
-                        Ver Jobs
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudButton Variant="Variant.Outlined" 
-                              Color="Color.Info" 
-                              OnClick="ViewLogs" 
-                              StartIcon="@Icons.Material.Filled.Assessment" 
-                              FullWidth="true">
-                        Ver Logs
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudButton Variant="Variant.Outlined" 
-                              Color="Color.Warning" 
-                              OnClick="RefreshDashboard" 
-                              StartIcon="@Icons.Material.Filled.Refresh" 
-                              FullWidth="true">
-                        Atualizar
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
     }
 </MudContainer>
 

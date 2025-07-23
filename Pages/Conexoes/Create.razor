@@ -16,7 +16,7 @@
 </MudContainer>
 
 @code {
-    private ConexaoModel conexao = new();
+    private ConexaoModel conexao = new() { Ativo = false };
     private bool isProcessing;
 
     private async Task SalvarAsync()

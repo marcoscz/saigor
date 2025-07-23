@@ -2,11 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Quartz;
 using Saigor.Data;
+using Saigor.Models;
 using Saigor.Repositories;
 using Saigor.Repositories.Base;
 using Saigor.Services;
-using Saigor.Jobs;
-using Saigor.Models;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,9 +79,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICacheService, MemoryCacheService>();
 
 // ------------------- Other Services -------------------
+builder.Services.AddHttpClient<ExternalApiService>();
 builder.Services.AddScoped<ICommandExecutor, CommandExecutorService>();
 builder.Services.AddScoped<HealthCheckService>();
 builder.Services.AddScoped<ExecuteJob>();
+
+// ------------------- HTTP Client -------------------
+builder.Services.AddHttpClient();
 
 // Registrar JobSchedulerService como Singleton para IHostedService e IJobSchedulerService
 builder.Services.AddSingleton<JobSchedulerService>();

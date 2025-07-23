@@ -92,48 +92,6 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
-    <!-- Ações Rápidas -->
-    <MudPaper Elevation="2" Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6" Class="mb-3">Ações Rápidas</MudText>
-        <MudGrid Spacing="2">
-            <MudItem xs="12">
-                <ActionButton Variant="Variant.Filled"
-                             Color="Color.Primary"
-                             OnClick="@NavigateToJobs"
-                             StartIcon="@Icons.Material.Filled.Add"
-                             FullWidth="true">
-                    Novo Job
-                </ActionButton>
-            </MudItem>
-            <MudItem xs="12">
-                <ActionButton Variant="Variant.Filled"
-                             Color="Color.Secondary"
-                             OnClick="@NavigateToTarefas"
-                             StartIcon="@Icons.Material.Filled.Add"
-                             FullWidth="true">
-                    Nova Tarefa
-                </ActionButton>
-            </MudItem>
-            <MudItem xs="12">
-                <ActionButton Variant="Variant.Filled"
-                             Color="Color.Tertiary"
-                             OnClick="@NavigateToConexoes"
-                             StartIcon="@Icons.Material.Filled.Add"
-                             FullWidth="true">
-                    Nova Conexão
-                </ActionButton>
-            </MudItem>
-            <MudItem xs="12">
-                <ActionButton Variant="Variant.Outlined"
-                             Color="Color.Info"
-                             OnClick="@RefreshDashboard"
-                             StartIcon="@Icons.Material.Filled.Refresh"
-                             FullWidth="true">
-                    Atualizar
-                </ActionButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
 </MudContainer>
 
 @code {
